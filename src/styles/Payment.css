@@ -1,0 +1,252 @@
+
+/* ================================
+   Payment Page
+================================ */
+
+.payment-page {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+  box-sizing: border-box;
+  background: #f6f7f9;
+}
+
+.payment-card {
+  width: 100%;
+  max-width: 520px;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 36px;
+  box-sizing: border-box;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+}
+
+/* Title */
+
+.payment-card h1 {
+  margin: 0 0 24px;
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* Order information */
+
+.payment-order {
+  margin-bottom: 24px;
+}
+
+.payment-order-number {
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.payment-amount {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* Transaction */
+
+.payment-transaction {
+  margin: 20px 0;
+  padding: 14px 16px;
+  background: #f3f4f6;
+  border-radius: 10px;
+  word-break: break-all;
+}
+
+.payment-transaction-label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.payment-transaction-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Instruction */
+
+.payment-instruction {
+  margin: 22px 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #4b5563;
+}
+
+/* QR section */
+
+.payment-qr-section {
+  margin: 28px auto;
+}
+
+.payment-qr-title {
+  margin: 0 0 16px;
+  font-size: 17px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.payment-qr-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 18px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  width: fit-content;
+  margin: 0 auto;
+}
+
+.payment-qr {
+  display: block;
+  width: 280px;
+  height: 280px;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+/* Status */
+
+.payment-status {
+  margin-top: 26px;
+  padding: 15px 18px;
+  border-radius: 12px;
+  background: #f3f4f6;
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.payment-status::before {
+  content: "";
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 9px;
+  border-radius: 50%;
+  background: #f59e0b;
+  animation: payment-pulse 1.5s infinite;
+}
+
+/* Loading animation */
+
+@keyframes payment-pulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* QR unavailable */
+
+.payment-no-qr {
+  padding: 30px 20px;
+  border: 1px dashed #d1d5db;
+  border-radius: 14px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* Mobile */
+
+@media (max-width: 600px) {
+  .payment-page {
+    padding: 20px 14px;
+    align-items: flex-start;
+  }
+
+  .payment-card {
+    margin-top: 20px;
+    padding: 26px 18px;
+    border-radius: 16px;
+  }
+
+  .payment-card h1 {
+    font-size: 24px;
+  }
+
+  .payment-amount {
+    font-size: 27px;
+  }
+
+  .payment-qr {
+    width: 240px;
+    height: 240px;
+  }
+
+  .payment-instruction {
+    font-size: 14px;
+  }
+}
+
+/* Small phones */
+
+@media (max-width: 380px) {
+  .payment-card {
+    padding: 22px 14px;
+  }
+
+  .payment-qr {
+    width: 210px;
+    height: 210px;
+  }
+}
+
+.payment-qr-section {
+  width: 100%;
+  margin: 28px auto;
+  text-align: center;
+}
+
+.payment-qr-title {
+  margin: 0 0 16px;
+  text-align: center;
+}
+
+.payment-qr-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+  padding: 18px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+}
+
+.payment-qr {
+  width: 280px;
+  height: 280px;
+  max-width: 100%;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
+
+
+

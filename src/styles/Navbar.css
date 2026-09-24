@@ -1,0 +1,59 @@
+.navbar {
+  height: 72px;
+  padding: 0 6%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.navbar-logo {
+  color: #111111;
+  text-decoration: none;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 32px;
+}
+
+.navbar-links a {
+  color: #444444;
+  text-decoration: none;
+  font-size: 15px;
+}
+
+.navbar-links a:hover {
+  color: #000000;
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.signin-btn,
+.signup-btn,
+.cart-btn {
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 9px 15px;
+  font-size: 14px;
+}
+
+.signin-btn {
+  color: #222222;
+}
+
+.signup-btn {
+  background: #111111;
+  color: white;
+}
+
+.cart-btn {
+  font-size: 18px;
+}

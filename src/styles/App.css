@@ -1,0 +1,346 @@
+
+/* =========================================
+   MARKETPLACE GLOBAL STYLE
+========================================= */
+
+:root {
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+
+  color: #111827;
+  background: #f6f7f9;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  width: 100%;
+  min-width: 100%;
+  min-height: 100vh;
+
+  margin: 0;
+  padding: 0;
+
+  background: #f6f7f9;
+  color: #111827;
+
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* =========================================
+   COMMON PAGE
+========================================= */
+
+.page {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.page-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+/* =========================================
+   HEADINGS
+========================================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: #111827;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin-top: 0;
+}
+
+/* =========================================
+   LINKS
+========================================= */
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* =========================================
+   BUTTONS
+========================================= */
+
+button {
+  font: inherit;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #111827;
+  outline-offset: 2px;
+}
+
+/* =========================================
+   INPUTS
+========================================= */
+
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+/* =========================================
+   IMAGES
+========================================= */
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+/* =========================================
+   CARD
+========================================= */
+
+.card {
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+}
+
+/* =========================================
+   PRIMARY BUTTON
+========================================= */
+
+.primary-button {
+  min-height: 52px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 22px;
+
+  border: none;
+  border-radius: 12px;
+
+  background: #111827;
+  color: #ffffff;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.primary-button:hover {
+  background: #1f2937;
+
+  transform: translateY(-2px);
+
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
+}
+
+.primary-button:active {
+  transform: translateY(0);
+}
+
+.primary-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* =========================================
+   SECONDARY BUTTON
+========================================= */
+
+.secondary-button {
+  min-height: 52px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 22px;
+
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+
+  background: #ffffff;
+  color: #111827;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.secondary-button:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  transform: translateY(-1px);
+}
+
+/* =========================================
+   PAGE TITLE
+========================================= */
+
+.page-title {
+  margin-bottom: 30px;
+}
+
+.page-title h1 {
+  margin: 0;
+
+  font-size: 32px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.page-title p {
+  margin: 8px 0 0;
+
+  color: #6b7280;
+  font-size: 15px;
+}
+
+/* =========================================
+   EMPTY STATE
+========================================= */
+
+.empty-state {
+  width: 100%;
+  min-height: 50vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+}
+
+.empty-state-card {
+  width: 100%;
+  max-width: 440px;
+
+  padding: 40px 30px;
+
+  background: #ffffff;
+  border-radius: 18px;
+
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+}
+
+.empty-state-card h2 {
+  margin-bottom: 10px;
+}
+
+.empty-state-card p {
+  margin-bottom: 24px;
+  color: #6b7280;
+}
+
+/* =========================================
+   ERROR
+========================================= */
+
+.error-message {
+  padding: 13px 15px;
+
+  border-radius: 10px;
+
+  background: #fef2f2;
+  color: #b91c1c;
+
+  font-size: 14px;
+}
+
+/* =========================================
+   LOADING
+========================================= */
+
+.loading {
+  width: 100%;
+  min-height: 50vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #6b7280;
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 600px) {
+
+  .page-container {
+    padding: 24px 14px;
+  }
+
+  .page-title h1 {
+    font-size: 27px;
+  }
+
+  .page-title p {
+    font-size: 14px;
+  }
+
+  .primary-button,
+  .secondary-button {
+    min-height: 50px;
+    width: 100%;
+  }
+
+}
+
