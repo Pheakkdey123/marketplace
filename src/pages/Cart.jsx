@@ -1,8 +1,8 @@
+
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { useCart } from "../context/CartContext";
-import "../styles/Home.css";
-import "../styles/App.css";
+import "../styles/Cart.css";
 
 function Cart() {
   const {
@@ -17,14 +17,14 @@ function Cart() {
       <div className="home">
         <Navbar />
 
-        <main className="featured">
+        <main className="featured cart-page">
           <p className="section-small">
             YOUR CART
           </p>
 
           <h1>Your cart is empty</h1>
 
-          <p>
+          <p className="cart-empty-text">
             Add some products before checking out.
           </p>
 
@@ -43,82 +43,46 @@ function Cart() {
     <div className="home">
       <Navbar />
 
-      <main className="featured">
-
+      <main className="featured cart-page">
         <p className="section-small">
           YOUR CART
         </p>
 
         <h1>Shopping Cart</h1>
 
-        <div
-          style={{
-            display: "grid",
-            gap: "20px",
-            marginTop: "30px",
-          }}
-        >
-
+        <div className="cart-list">
           {cart.map((product) => (
             <div
+              className="cart-item"
               key={product.id}
-              style={{
-                display: "grid",
-                gridTemplateColumns:
-                  "100px 1fr auto",
-                gap: "20px",
-                alignItems: "center",
-                background: "#fff",
-                padding: "20px",
-                borderRadius: "12px",
-                border: "1px solid #eee",
-              }}
             >
-
-              {/* Image */}
-
               <img
                 src={product.image}
                 alt={product.name}
-                style={{
-                  width: "100px",
-                  height: "100px",
-                  objectFit: "cover",
-                  borderRadius: "8px",
-                }}
+                className="cart-item-image"
               />
 
-              {/* Product Info */}
-
-              <div>
+              <div className="cart-item-info">
                 <p className="section-small">
                   {product.category}
                 </p>
 
-                <h3>
-                  {product.name}
-                </h3>
+                <h3>{product.name}</h3>
 
-                <p>
+                <p className="cart-item-price">
                   ${product.price.toFixed(2)}
                 </p>
 
-                {/* Quantity */}
-
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                  }}
-                >
+                <div className="cart-quantity">
                   <button
+                    type="button"
                     onClick={() =>
                       updateQuantity(
                         product.id,
                         product.quantity - 1
                       )
                     }
+                    aria-label={`Decrease ${product.name} quantity`}
                   >
                     −
                   </button>
@@ -128,26 +92,22 @@ function Cart() {
                   </strong>
 
                   <button
+                    type="button"
                     onClick={() =>
                       updateQuantity(
                         product.id,
                         product.quantity + 1
                       )
                     }
+                    aria-label={`Increase ${product.name} quantity`}
                   >
                     +
                   </button>
                 </div>
               </div>
 
-              {/* Actions */}
-
-              <div
-                style={{
-                  textAlign: "right",
-                }}
-              >
-                <strong>
+              <div className="cart-item-actions">
+                <strong className="cart-item-total">
                   $
                   {(
                     product.price *
@@ -155,52 +115,24 @@ function Cart() {
                   ).toFixed(2)}
                 </strong>
 
-                <br />
-
                 <button
+                  type="button"
+                  className="cart-remove"
                   onClick={() =>
                     removeFromCart(product.id)
                   }
-                  style={{
-                    marginTop: "10px",
-                    border: "none",
-                    background: "none",
-                    color: "#c00",
-                    cursor: "pointer",
-                  }}
                 >
                   Remove
                 </button>
               </div>
-
             </div>
           ))}
-
         </div>
 
-        {/* Cart Summary */}
-
-        <div
-          style={{
-            marginTop: "30px",
-            marginLeft: "auto",
-            maxWidth: "400px",
-            background: "#fff",
-            padding: "25px",
-            borderRadius: "12px",
-            border: "1px solid #eee",
-          }}
-        >
-
+        <div className="cart-summary">
           <h2>Order Summary</h2>
 
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginTop: "20px",
-            }}
-          >
+          <div className="cart-summary-row">
             <span>Total</span>
 
             <strong>
@@ -210,25 +142,15 @@ function Cart() {
 
           <Link
             to="/checkout"
-            style={{
-              display: "block",
-              marginTop: "20px",
-              padding: "14px",
-              textAlign: "center",
-              background: "#111",
-              color: "#fff",
-              textDecoration: "none",
-              borderRadius: "8px",
-            }}
+            className="cart-checkout-button"
           >
             Proceed to Checkout
           </Link>
-
         </div>
-
       </main>
     </div>
   );
 }
 
 export default Cart;
+

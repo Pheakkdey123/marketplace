@@ -3,8 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 
 import { supabase } from "../services/supabase";
 import Navbar from "../components/Navbar";
-import "../styles/Home.css";
-import "../styles/App.css";
+import "../styles/OrderSuccess.css";
 
 function OrderSuccess() {
   const [searchParams] = useSearchParams();

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../services/supabase";
 import Navbar from "../components/Navbar";
-import "../styles/Home.css";
+import "../styles/Profile.css";
 
 function Profile() {
   const [user, setUser] = useState(null);

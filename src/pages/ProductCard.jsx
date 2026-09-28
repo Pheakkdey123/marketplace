@@ -1,9 +1,14 @@
+
 import { Link } from "react-router-dom";
+import "../styles/ProductCard.css";
 
 function ProductCard({ product }) {
   return (
     <div className="product-card">
-      <Link to={`/products/${product.id}`}>
+      <Link
+        to={`/products/${product.id}`}
+        className="product-image-link"
+      >
         <img
           src={product.image_url}
           alt={product.name}
@@ -23,7 +28,7 @@ function ProductCard({ product }) {
         </p>
 
         <div className="product-bottom">
-          <strong>
+          <strong className="product-price">
             ${Number(product.price).toFixed(2)}
           </strong>
 
@@ -40,3 +45,4 @@ function ProductCard({ product }) {
 }
 
 export default ProductCard;
+

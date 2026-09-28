@@ -1,0 +1,155 @@
+
+.order-success-page {
+  width: 100%;
+  max-width: 700px;
+  text-align: center;
+}
+
+/* Messages */
+
+.order-success-message {
+  margin: 15px 0 0;
+  color: #666;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.order-processing-message {
+  max-width: 580px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Order information */
+
+.order-info-card {
+  width: 100%;
+  margin-top: 30px;
+  padding: 25px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+}
+
+.order-info-card h2 {
+  margin: 5px 0 0;
+  font-size: 26px;
+  color: #111;
+}
+
+.order-current-status {
+  margin: 10px 0 0;
+  color: #666;
+}
+
+.order-detail {
+  margin: 15px 0 0;
+  color: #555;
+}
+
+.order-payment-reference {
+  margin: 10px 0 0;
+  color: #777;
+  font-size: 14px;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+/* Buttons */
+
+.order-success-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 30px;
+  flex-wrap: wrap;
+}
+
+.order-shopping-button {
+  display: inline-block;
+  padding: 13px 24px;
+  border: 1px solid #111;
+  border-radius: 8px;
+  background: #fff;
+  color: #111;
+  text-decoration: none;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.order-shopping-button:hover {
+  background: #111;
+  color: #fff;
+}
+
+/* Tablet */
+
+@media (max-width: 768px) {
+  .order-success-page {
+    max-width: 100%;
+  }
+
+  .order-success-message {
+    font-size: 17px;
+  }
+
+  .order-info-card {
+    padding: 22px;
+  }
+}
+
+/* Phone */
+
+@media (max-width: 600px) {
+  .order-success-page {
+    text-align: center;
+  }
+
+  .order-success-message {
+    font-size: 16px;
+  }
+
+  .order-info-card {
+    margin-top: 24px;
+    padding: 20px;
+    border-radius: 10px;
+  }
+
+  .order-info-card h2 {
+    font-size: 23px;
+  }
+
+  .order-success-actions {
+    flex-direction: column;
+    align-items: stretch;
+    margin-top: 24px;
+  }
+
+  .order-success-actions .hero-button,
+  .order-shopping-button {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* Small phones */
+
+@media (max-width: 380px) {
+  .order-success-message {
+    font-size: 15px;
+  }
+
+  .order-info-card {
+    padding: 17px;
+  }
+
+  .order-info-card h2 {
+    font-size: 21px;
+  }
+
+  .order-payment-reference {
+    font-size: 12px;
+  }
+}
+

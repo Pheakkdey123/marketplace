@@ -2,9 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { supabase } from "../services/supabase";
-import "../styles/App.css";
 import "../styles/Home.css";
-
 function Home() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);

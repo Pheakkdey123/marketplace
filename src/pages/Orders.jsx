@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../services/supabase";
 import Navbar from "../components/Navbar";
-import "../styles/Home.css";
-import "../styles/App.css";
+import "../styles/Orders.css";
 
 function Orders() {
   const [orders, setOrders] = useState([]);

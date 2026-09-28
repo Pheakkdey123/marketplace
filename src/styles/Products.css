@@ -1,0 +1,271 @@
+
+/* =========================
+   PRODUCTS PAGE
+========================= */
+
+.products-page {
+  width: 100%;
+  min-height: 100vh;
+
+  background: #f8fafc;
+}
+
+/* =========================
+   MAIN CONTENT
+========================= */
+
+.products-content {
+  width: 100%;
+  max-width: 1200px;
+
+  margin: 0 auto;
+  padding: 60px 24px 80px;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.products-header {
+  margin-bottom: 40px;
+}
+
+.products-small {
+  margin: 0 0 10px;
+
+  color: #6b7280;
+
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.products-header h1 {
+  margin: 0;
+
+  color: #111827;
+
+  font-size: 38px;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -0.8px;
+}
+
+.products-description {
+  max-width: 600px;
+
+  margin: 12px 0 0;
+
+  color: #6b7280;
+
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* =========================
+   PRODUCT GRID
+========================= */
+
+.products-grid {
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  gap: 24px;
+}
+
+/* =========================
+   STATUS
+========================= */
+
+.products-status {
+  width: 100%;
+
+  padding: 60px 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+}
+
+.products-status p {
+  margin: 0;
+
+  color: #6b7280;
+
+  font-size: 15px;
+}
+
+/* =========================
+   ERROR
+========================= */
+
+.products-error {
+  width: 100%;
+
+  padding: 24px;
+
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+
+  background: #fef2f2;
+}
+
+.products-error p {
+  margin: 0 0 6px;
+
+  color: #b91c1c;
+
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.products-error span {
+  color: #991b1b;
+
+  font-size: 14px;
+  line-height: 1.5;
+
+  word-break: break-word;
+}
+
+/* =========================
+   LARGE LAPTOP
+========================= */
+
+@media (max-width: 1100px) {
+  .products-content {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .products-grid {
+    gap: 20px;
+  }
+}
+
+/* =========================
+   TABLET
+========================= */
+
+@media (max-width: 850px) {
+  .products-content {
+    padding-top: 48px;
+    padding-bottom: 60px;
+  }
+
+  .products-header {
+    margin-bottom: 30px;
+  }
+
+  .products-header h1 {
+    font-size: 34px;
+  }
+
+  .products-description {
+    font-size: 15px;
+  }
+
+  .products-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 18px;
+  }
+}
+
+/* =========================
+   PHONE
+========================= */
+
+@media (max-width: 600px) {
+  .products-content {
+    padding: 32px 12px 50px;
+  }
+
+  .products-header {
+    margin-bottom: 22px;
+  }
+
+  .products-small {
+    margin-bottom: 7px;
+
+    font-size: 10px;
+    letter-spacing: 1.2px;
+  }
+
+  .products-header h1 {
+    font-size: 28px;
+    letter-spacing: -0.5px;
+  }
+
+  .products-description {
+    margin-top: 8px;
+
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /*
+    PHONE:
+    2 products per row
+    4 products = 2 × 2
+  */
+
+  .products-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 12px;
+  }
+
+  .products-status {
+    padding: 40px 10px;
+  }
+
+  .products-error {
+    padding: 18px;
+  }
+}
+
+/* =========================
+   SMALL PHONE
+========================= */
+
+@media (max-width: 400px) {
+  .products-content {
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+
+  .products-grid {
+    gap: 9px;
+  }
+
+  .products-header h1 {
+    font-size: 25px;
+  }
+
+  .products-description {
+    font-size: 13px;
+  }
+}
+
+/* =========================
+   VERY SMALL PHONE
+========================= */
+
+@media (max-width: 340px) {
+  .products-content {
+    padding-left: 7px;
+    padding-right: 7px;
+  }
+
+  .products-grid {
+    gap: 7px;
+  }
+}
+

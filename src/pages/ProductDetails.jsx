@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../services/supabase";
 import { useCart } from "../context/CartContext";
 import Navbar from "../components/Navbar";
-import "../styles/Home.css";
+import "../styles/ProductDetails.css";
 
 function ProductDetails() {
   const { id } = useParams();

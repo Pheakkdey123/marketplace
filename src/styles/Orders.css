@@ -1,0 +1,225 @@
+
+.orders-page {
+  width: 100%;
+}
+
+.orders-error {
+  margin-top: 20px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+
+/* Empty orders */
+
+.orders-empty {
+  margin-top: 30px;
+}
+
+.orders-empty p {
+  margin: 0 0 20px;
+  color: #666;
+}
+
+/* Orders list */
+
+.orders-list {
+  display: grid;
+  gap: 25px;
+  margin-top: 30px;
+}
+
+/* Order card */
+
+.order-card {
+  background: #fff;
+  padding: 25px;
+  border-radius: 12px;
+  border: 1px solid #eee;
+}
+
+/* Header */
+
+.order-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.order-header-item {
+  min-width: 0;
+}
+
+.order-header-item h2 {
+  margin: 4px 0 0;
+  font-size: 24px;
+  color: #111;
+}
+
+.order-header-item strong {
+  display: block;
+  margin-top: 7px;
+}
+
+.order-status {
+  text-transform: capitalize;
+}
+
+.order-total {
+  font-size: 18px;
+}
+
+/* Date */
+
+.order-date {
+  margin: 15px 0 0;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Items */
+
+.order-items {
+  margin-top: 25px;
+  display: grid;
+  gap: 12px;
+}
+
+.order-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px;
+  background: #f7f7f7;
+  border-radius: 8px;
+}
+
+.order-item-image {
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.order-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.order-item-info strong {
+  display: block;
+  color: #111;
+}
+
+.order-item-info p {
+  margin: 5px 0 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.order-item-price {
+  flex-shrink: 0;
+  color: #111;
+}
+
+/* Tablet */
+
+@media (max-width: 768px) {
+  .order-card {
+    padding: 20px;
+  }
+
+  .order-header {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .order-header-item:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Phone */
+
+@media (max-width: 600px) {
+  .orders-list {
+    margin-top: 24px;
+    gap: 18px;
+  }
+
+  .order-card {
+    padding: 18px;
+    border-radius: 10px;
+  }
+
+  .order-header {
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 12px;
+  }
+
+  .order-header-item h2 {
+    font-size: 21px;
+  }
+
+  .order-total {
+    font-size: 16px;
+  }
+
+  .order-date {
+    font-size: 13px;
+  }
+
+  .order-item {
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .order-item-image {
+    width: 52px;
+    height: 52px;
+  }
+
+  .order-item-info {
+    font-size: 14px;
+  }
+
+  .order-item-info p {
+    font-size: 12px;
+  }
+
+  .order-item-price {
+    font-size: 14px;
+  }
+}
+
+/* Small phone */
+
+@media (max-width: 380px) {
+  .order-card {
+    padding: 15px;
+  }
+
+  .order-header {
+    gap: 15px 8px;
+  }
+
+  .order-item-image {
+    width: 46px;
+    height: 46px;
+  }
+
+  .order-item {
+    gap: 8px;
+  }
+
+  .order-item-info {
+    font-size: 13px;
+  }
+
+  .order-item-price {
+    font-size: 13px;
+  }
+}

@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../services/supabase";
 import { useCart } from "../context/CartContext";
 import "../styles/Checkout.css";
-import "../styles/App.css";
 function Checkout() {
   const navigate = useNavigate();
   const { cart, clearCart } = useCart();

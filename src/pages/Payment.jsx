@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../services/supabase"; 
 import "../styles/Payment.css";
-import "../styles/App.css";
 
 function Payment() {
   const navigate = useNavigate();

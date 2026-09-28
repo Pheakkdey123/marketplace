@@ -1,8 +1,9 @@
+
 import { useEffect, useState } from "react";
+import { supabase } from "../services/supabase";
 import Navbar from "../components/Navbar";
 import ProductCard from "../components/ProductCard";
-import { supabase } from "../services/supabase";
-import "../styles/Home.css";
+import "../styles/Products.css";
 
 function Products() {
   const [products, setProducts] = useState([]);
@@ -11,15 +12,20 @@ function Products() {
 
   useEffect(() => {
     async function loadProducts() {
+      setLoading(true);
+      setError("");
+
       const { data, error } = await supabase
         .from("products")
         .select("*")
-        .order("id");
+        .order("created_at", { ascending: false });
 
       if (error) {
+        console.error("Load products error:", error);
         setError(error.message);
+        setProducts([]);
       } else {
-        setProducts(data);
+        setProducts(data || []);
       }
 
       setLoading(false);
@@ -29,23 +35,41 @@ function Products() {
   }, []);
 
   return (
-    <div className="home">
+    <div className="products-page">
       <Navbar />
 
-      <main className="featured">
-        <div className="section-header">
-          <div>
-            <p className="section-small">OUR STORE</p>
-            <h1>All Products</h1>
-          </div>
+      <main className="products-content">
+        <div className="products-header">
+          <p className="products-small">OUR PRODUCTS</p>
+
+          <h1>All Products</h1>
+
+          <p className="products-description">
+            Browse our collection and find something you like.
+          </p>
         </div>
 
-        {loading && <p>Loading products...</p>}
+        {loading && (
+          <div className="products-status">
+            <p>Loading products...</p>
+          </div>
+        )}
 
-        {error && <p>{error}</p>}
+        {error && !loading && (
+          <div className="products-error">
+            <p>Unable to load products.</p>
+            <span>{error}</span>
+          </div>
+        )}
 
-        {!loading && !error && (
-          <div className="product-grid">
+        {!loading && !error && products.length === 0 && (
+          <div className="products-status">
+            <p>No products available.</p>
+          </div>
+        )}
+
+        {!loading && !error && products.length > 0 && (
+          <div className="products-grid">
             {products.map((product) => (
               <ProductCard
                 key={product.id}
@@ -60,3 +84,4 @@ function Products() {
 }
 
 export default Products;
+
