@@ -1,39 +1,53 @@
 import { Link } from "react-router-dom";
+import "../styles/ProductCard.css";
+import "../styles/Home.css";
+import "../styles/Products.css";
 
 function ProductCard({ product }) {
+  const price = Number(product.price);
+
   return (
-    <div className="product-card">
-      <Link to={`/products/${product.id}`}>
+    <article className="market-product-card">
+      <Link
+        to={`/products/${product.id}`}
+        className="market-product-image-link"
+      >
         <img
-          src={product.image}
+          src={product.image_url}
           alt={product.name}
-          className="product-image"
+          className="market-product-image"
         />
       </Link>
 
-      <div className="product-info">
-        <p className="product-category">
+      <div className="market-product-info">
+        <p className="market-product-category">
           {product.category}
         </p>
 
-        <h3>{product.name}</h3>
+        <h3 className="market-product-name">
+          {product.name}
+        </h3>
 
-        <p className="product-description">
-          {product.description}
-        </p>
+        {product.description && (
+          <p className="market-product-description">
+            {product.description}
+          </p>
+        )}
 
-        <div className="product-bottom">
-          <strong>${product.price.toFixed(2)}</strong>
+        <div className="market-product-bottom">
+          <strong className="market-product-price">
+            ${price.toFixed(2)}
+          </strong>
 
           <Link
             to={`/products/${product.id}`}
-            className="product-button"
+            className="market-product-button"
           >
             View
           </Link>
         </div>
       </div>
-    </div>
+    </article>
   );
 }
 

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../services/supabase";
@@ -43,53 +44,56 @@ function Login() {
   };
 
   return (
-    <div>
-      <h1>Sign In</h1>
+    <div className="login-page">
+      <div className="login-card">
+        <h1>Sign In</h1>
 
-      <form onSubmit={handleLogin}>
-        <div>
-          <label>Email</label>
-          <br />
+        <form onSubmit={handleLogin}>
+          <div>
+            <label htmlFor="email">Email</label>
 
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+              autoComplete="email"
+              required
+            />
+          </div>
 
-        <br />
+          <div>
+            <label htmlFor="password">Password</label>
 
-        <div>
-          <label>Password</label>
-          <br />
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              autoComplete="current-password"
+              required
+            />
+          </div>
 
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
+          <button type="submit" disabled={loading}>
+            {loading ? "Signing in..." : "Sign In"}
+          </button>
+        </form>
 
-        <br />
+        {message && <p>{message}</p>}
 
-        <button type="submit" disabled={loading}>
-          {loading ? "Signing in..." : "Sign In"}
-        </button>
-      </form>
-
-      {message && <p>{message}</p>}
-
-      <p>
-        Don't have an account?{" "}
-        <Link to={`/signup${location.search}`}>
+        <p>
+          Don't have an account?{" "}
+          <Link to={`/signup${location.search}`}>
             Sign Up
-        </Link>
-      </p>
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }
 
 export default Login;
+

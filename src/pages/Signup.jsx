@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../services/supabase";
@@ -33,7 +34,7 @@ function Signup() {
     const params = new URLSearchParams(location.search);
     const redirect = params.get("redirect");
 
-    // If email confirmation is required
+    // Email confirmation is required
     if (!data.session) {
       setMessage(
         "Account created. Please check your email to confirm your account."
@@ -43,7 +44,7 @@ function Signup() {
       return;
     }
 
-    // If Supabase logged the user in immediately
+    // Supabase logged the user in immediately
     if (redirect) {
       navigate(redirect);
     } else {
@@ -54,56 +55,71 @@ function Signup() {
   };
 
   return (
-    <div>
-      <h1>Create Account</h1>
+    <div className="signup-page">
+      <div className="signup-card">
+        <h1>Create Account</h1>
 
-      <form onSubmit={handleSignup}>
-        <div>
-          <label>Email</label>
-          <br />
+        <form onSubmit={handleSignup}>
+          <div>
+            <label htmlFor="signup-email">
+              Email
+            </label>
 
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
+            <input
+              id="signup-email"
+              type="email"
+              value={email}
+              onChange={(e) =>
+                setEmail(e.target.value)
+              }
+              placeholder="Enter your email"
+              autoComplete="email"
+              required
+            />
+          </div>
 
-        <br />
+          <div>
+            <label htmlFor="signup-password">
+              Password
+            </label>
 
-        <div>
-          <label>Password</label>
-          <br />
+            <input
+              id="signup-password"
+              type="password"
+              value={password}
+              onChange={(e) =>
+                setPassword(e.target.value)
+              }
+              placeholder="Create a password"
+              autoComplete="new-password"
+              minLength={6}
+              required
+            />
+          </div>
 
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-          />
-        </div>
+          <button
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? "Creating..." : "Sign Up"}
+          </button>
+        </form>
 
-        <br />
+        {message && <p>{message}</p>}
 
-        <button type="submit" disabled={loading}>
-          {loading ? "Creating..." : "Sign Up"}
-        </button>
-      </form>
-
-      {message && <p>{message}</p>}
-
-      <p>
-        Already have an account?{" "}
-        <Link
-          to={`/login${
-            location.search ? location.search : ""
-          }`}
-        >
-          Sign In
-        </Link>
-      </p>
+        <p>
+          Already have an account?{" "}
+          <Link
+            to={`/login${
+              location.search
+                ? location.search
+                : ""
+            }`}
+          >
+            Sign In
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }
