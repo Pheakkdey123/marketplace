@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { supabase } from "../services/supabase"; 
+import { supabase } from "../services/supabase";
 import "../styles/Payment.css";
 
 function Payment() {
@@ -18,7 +18,7 @@ function Payment() {
   const [error, setError] = useState("");
 
   // --------------------------------------------------
-  // Load order + PayWay payment information
+  // Load order
   // --------------------------------------------------
 
   useEffect(() => {
@@ -30,7 +30,6 @@ function Payment() {
 
     async function loadPayment() {
       try {
-        // Get logged-in user
         const {
           data: { user },
         } = await supabase.auth.getUser();
@@ -38,84 +37,58 @@ function Payment() {
         if (!user) {
           navigate(
             `/login?redirect=/payment?order_id=${orderId}`,
-            {
-              replace: true,
-            }
+            { replace: true }
           );
-
           return;
         }
 
-        // Get order
-        const {
-          data,
-          error: orderError,
-        } = await supabase
+        const { data, error: orderError } = await supabase
           .from("orders")
-          .select(
-            `
-              id,
-              total,
-              status,
-              payment_method,
-              payment_reference,
-              paid_at
-            `
-          )
+          .select(`
+            id,
+            total,
+            status,
+            payment_method,
+            payment_reference,
+            paid_at
+          `)
           .eq("id", orderId)
           .eq("user_id", user.id)
           .single();
 
         if (orderError) {
-          console.error(
-            "Order loading error:",
-            orderError
-          );
+          console.error("Order loading error:", orderError);
 
           setError("Unable to load order.");
           setLoading(false);
-
           return;
         }
 
         setOrder(data);
 
-        // --------------------------------------------------
-        // If already paid, go directly to success
-        // --------------------------------------------------
-
+        // Already paid
         if (data.status === "paid") {
+          sessionStorage.removeItem(`payway_${orderId}`);
+
           navigate(
             `/order-success?order_id=${orderId}`,
-            {
-              replace: true,
-            }
+            { replace: true }
           );
 
           return;
         }
 
-        // --------------------------------------------------
-        // Read PayWay information from sessionStorage
-        // --------------------------------------------------
-
-        const storedPayment =
-          sessionStorage.getItem(
-            `payway_${orderId}`
-          );
+        // Load PayWay information
+        const storedPayment = sessionStorage.getItem(
+          `payway_${orderId}`
+        );
 
         if (storedPayment) {
           try {
-            const payment =
-              JSON.parse(storedPayment);
+            const payment = JSON.parse(storedPayment);
 
-            setQrImage(
-              payment.qrImage || ""
-            );
-
-            setTranId(
-              payment.tranId || ""
-            );
+            setQrImage(payment.qrImage || "");
+            setTranId(payment.tranId || "");
           } catch (parseError) {
             console.error(
               "Unable to read PayWay payment:",
@@ -126,10 +99,7 @@ function Payment() {
 
         setLoading(false);
       } catch (err) {
-        console.error(
-          "Payment loading error:",
-          err
-        );
+        console.error("Payment loading error:", err);
 
         setError(
           err instanceof Error
@@ -145,77 +115,75 @@ function Payment() {
   }, [orderId, navigate]);
 
   // --------------------------------------------------
-  // Poll order status
+  // Check payment status
   // --------------------------------------------------
 
   useEffect(() => {
-    if (!orderId || !order) {
+    if (!orderId) {
       return;
     }
 
-    if (order.status === "paid") {
-      return;
+    let cancelled = false;
+
+    async function checkPaymentStatus() {
+      const { data, error: statusError } = await supabase
+        .from("orders")
+        .select(`
+          id,
+          total,
+          status,
+          payment_method,
+          payment_reference,
+          paid_at
+        `)
+        .eq("id", orderId)
+        .single();
+
+      if (cancelled) {
+        return;
+      }
+
+      if (statusError) {
+        console.error(
+          "Payment status check error:",
+          statusError
+        );
+        return;
+      }
+
+      setOrder(data);
+
+      console.log(
+        "Payment status:",
+        data.status
+      );
+
+      if (data.status === "paid") {
+        sessionStorage.removeItem(
+          `payway_${orderId}`
+        );
+
+        navigate(
+          `/order-success?order_id=${orderId}`,
+          { replace: true }
+        );
+      }
     }
 
+    // Check immediately
+    checkPaymentStatus();
+
+    // Then check every 5 seconds
     const interval = setInterval(
-      async () => {
-        const {
-          data,
-          error: statusError,
-        } = await supabase
-          .from("orders")
-          .select(
-            `
-              id,
-              total,
-              status,
-              payment_method,
-              payment_reference,
-              paid_at
-            `
-          )
-          .eq("id", orderId)
-          .single();
-
-        if (statusError) {
-          console.error(
-            "Payment status check error:",
-            statusError
-          );
-
-          return;
-        }
-
-        setOrder(data);
-
-        // --------------------------------------------------
-        // Payment confirmed
-        // --------------------------------------------------
-
-        if (data.status === "paid") {
-          clearInterval(interval);
-
-          // Remove temporary PayWay data
-          sessionStorage.removeItem(
-            `payway_${orderId}`
-          );
-
-          // Go to success page
-          navigate(
-            `/order-success?order_id=${orderId}`,
-            {
-              replace: true,
-            }
-          );
-        }
-      },
+      checkPaymentStatus,
       5000
     );
 
     return () => {
+      cancelled = true;
       clearInterval(interval);
     };
-  }, [orderId, order, navigate]);
+  }, [orderId, navigate]);
 
   // --------------------------------------------------
   // Loading
@@ -244,9 +212,7 @@ function Payment() {
           <p>{error}</p>
 
           <button
-            onClick={() =>
-              navigate("/checkout")
-            }
+            onClick={() => navigate("/checkout")}
           >
             Back to Checkout
           </button>
@@ -258,6 +224,10 @@ function Payment() {
   // --------------------------------------------------
   // Payment page
   // --------------------------------------------------
+
+  if (!order) {
+    return null;
+  }
 
   return (
     <div className="payment-page">
@@ -279,17 +249,15 @@ function Payment() {
           </p>
         )}
 
-        {/* ------------------------------------------------
-            QR CODE
-        ------------------------------------------------ */}
+        {/* QR CODE */}
 
         {qrImage ? (
           <div className="payment-qr-container">
 
             <p>
               Scan this QR code with{" "}
-              <strong>ABA Mobile</strong>
-              {" "}to pay.
+              <strong>ABA Mobile</strong>{" "}
+              to pay.
             </p>
 
             <img
@@ -318,9 +286,7 @@ function Payment() {
           </div>
         )}
 
-        {/* ------------------------------------------------
-            WAITING FOR PAYMENT
-        ------------------------------------------------ */}
+        {/* PAYMENT STATUS */}
 
         {order.status === "pending" && (
           <div className="payment-status">
@@ -339,18 +305,24 @@ function Payment() {
           </div>
         )}
 
-        {/* ------------------------------------------------
-            BACK BUTTON
-        ------------------------------------------------ */}
+        {order.status === "paid" && (
+          <div className="payment-status">
+            <p>
+              Payment confirmed. Redirecting...
+            </p>
+          </div>
+        )}
 
-        <button
-          className="payment-cancel"
-          onClick={() =>
-            navigate("/checkout")
-          }
-        >
-          Back to Checkout
-        </button>
+        {/* BACK BUTTON */}
+
+        {order.status === "pending" && (
+          <button
+            className="payment-cancel"
+            onClick={() => navigate("/checkout")}
+          >
+            Back to Checkout
+          </button>
+        )}
 
       </div>
     </div>

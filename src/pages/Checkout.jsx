@@ -1,20 +1,30 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../services/supabase";
 import { useCart } from "../context/CartContext";
 import "../styles/Checkout.css";
+
 function Checkout() {
   const navigate = useNavigate();
-  const { cart, clearCart } = useCart();
+  const { cart } = useCart();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const total = cart.reduce(
-    (sum, item) =>
-      sum + Number(item.price) * Number(item.quantity),
-    0
-  );
+  // Calculate total using variant price
+  const total = cart.reduce((sum, item) => {
+    const price = Number(
+      item.variant_price ??
+      item.price ??
+      0
+    );
+
+    return (
+      sum +
+      price * Number(item.quantity)
+    );
+  }, 0);
 
   async function handlePayment() {
     try {
@@ -32,18 +42,31 @@ function Checkout() {
         return;
       }
 
+      // 2. Check cart
       if (!cart || cart.length === 0) {
         setError("Your cart is empty.");
         return;
       }
 
-      // 2. Prepare cart items
+      // 3. Prepare cart items
+      //
+      // Send variant_id when available.
+      // Keep product_id for compatibility
+      // with the existing order system.
       const items = cart.map((item) => ({
         product_id: Number(item.id),
+        variant_id: item.variant_id
+          ? Number(item.variant_id)
+          : null,
         quantity: Number(item.quantity),
       }));
 
-      // 3. Create pending order in Supabase
+      console.log(
+        "Checkout items:",
+        items
+      );
+
+      // 4. Create pending order in Supabase
       const {
         data: orderId,
         error: orderError,
@@ -52,8 +75,16 @@ function Checkout() {
       });
 
       if (orderError) {
-        console.error("Create order error:", orderError);
-        setError(orderError.message);
+        console.error(
+          "Create order error:",
+          orderError
+        );
+
+        setError(
+          orderError.message ||
+            "Unable to create order."
+        );
+
         return;
       }
 
@@ -62,19 +93,25 @@ function Checkout() {
         return;
       }
 
-      console.log("Created order:", orderId);
+      console.log(
+        "Created order:",
+        orderId
+      );
 
-      // 4. Get current session/access token
+      // 5. Get current session/access token
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
       if (!session?.access_token) {
-        setError("Your login session has expired.");
+        setError(
+          "Your login session has expired."
+        );
+
         return;
       }
 
-      // 5. Ask Supabase to create PayWay payment
+      // 6. Ask Supabase to create PayWay payment
       const {
         data: paymentData,
         error: paymentError,
@@ -119,24 +156,19 @@ function Checkout() {
       }
 
       /*
-       * IMPORTANT:
-       *
-       * PayWay "code 00" means the payment request
-       * was successfully created.
+       * PayWay "code 00" means the payment
+       * request was successfully created.
        *
        * It does NOT mean the customer has paid.
-       *
-       * We therefore go to Payment.jsx and wait
-       * for the real payment confirmation.
        */
 
-      // 6. Store the PayWay QR image temporarily
+      // 7. Get PayWay QR image
       const qrImage =
         paymentData.qrImage ||
         paymentData.qr_image ||
         "";
 
-      // 7. Save payment information for Payment.jsx
+      // 8. Save PayWay information
       sessionStorage.setItem(
         `payway_${orderId}`,
         JSON.stringify({
@@ -149,17 +181,19 @@ function Checkout() {
         })
       );
 
-      // 8. IMPORTANT:
-      // Do NOT clear the cart yet.
+      // 9. Do NOT clear cart yet.
       //
-      // The customer has not paid.
-      //
-      // We clear it only after payment is confirmed.
+      // Payment has not been confirmed.
 
-      // 9. Go to payment page
-      navigate(`/payment?order_id=${orderId}`);
+      // 10. Go to payment page
+      navigate(
+        `/payment?order_id=${orderId}`
+      );
     } catch (err) {
-      console.error("Checkout error:", err);
+      console.error(
+        "Checkout error:",
+        err
+      );
 
       setError(
         err instanceof Error
@@ -171,6 +205,7 @@ function Checkout() {
     }
   }
 
+  // Empty cart
   if (!cart || cart.length === 0) {
     return (
       <div className="checkout-page">
@@ -178,7 +213,9 @@ function Checkout() {
           <h1>Your Cart Is Empty</h1>
 
           <button
-            onClick={() => navigate("/products")}
+            onClick={() =>
+              navigate("/products")
+            }
           >
             Continue Shopping
           </button>
@@ -193,29 +230,55 @@ function Checkout() {
         <h1>Checkout</h1>
 
         <div className="checkout-items">
-          {cart.map((item) => (
-            <div
-              className="checkout-item"
-              key={item.id}
-            >
-              <div>
-                <strong>{item.name}</strong>
+          {cart.map((item) => {
+            const price = Number(
+              item.variant_price ??
+              item.price ??
+              0
+            );
 
-                <p>
-                  ${Number(item.price).toFixed(2)} ×{" "}
-                  {item.quantity}
-                </p>
+            return (
+              <div
+                className="checkout-item"
+                key={`${item.id}-${item.variant_id}`}
+              >
+                <div>
+                  <strong>
+                    {item.name}
+                  </strong>
+
+                  {item.variant_name && (
+                    <p>
+                      Variant:{" "}
+                      <strong>
+                        {item.variant_name}
+                      </strong>
+                    </p>
+                  )}
+
+                  {item.variant_sku && (
+                    <p>
+                      SKU:{" "}
+                      {item.variant_sku}
+                    </p>
+                  )}
+
+                  <p>
+                    ${price.toFixed(2)} ×{" "}
+                    {item.quantity}
+                  </p>
+                </div>
+
+                <strong>
+                  $
+                  {(
+                    price *
+                    Number(item.quantity)
+                  ).toFixed(2)}
+                </strong>
               </div>
-
-              <strong>
-                $
-                {(
-                  Number(item.price) *
-                  Number(item.quantity)
-                ).toFixed(2)}
-              </strong>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="checkout-total">
@@ -244,7 +307,9 @@ function Checkout() {
 
         <button
           className="checkout-back-button"
-          onClick={() => navigate("/cart")}
+          onClick={() =>
+            navigate("/cart")
+          }
           disabled={loading}
         >
           Back to Cart
@@ -255,3 +320,4 @@ function Checkout() {
 }
 
 export default Checkout;
+
