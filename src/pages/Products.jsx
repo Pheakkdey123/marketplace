@@ -17,7 +17,16 @@ function Products() {
 
       const { data, error } = await supabase
         .from("products")
-        .select("*")
+        .select(`
+          *,
+          product_images (
+            id,
+            image_url,
+            alt_text,
+            sort_order,
+            is_primary
+          )
+        `)
         .order("created_at", { ascending: false });
 
       if (error) {

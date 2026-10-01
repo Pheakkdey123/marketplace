@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import "../styles/ProductCard.css";
 import "../styles/Home.css";
@@ -6,17 +7,30 @@ import "../styles/Products.css";
 function ProductCard({ product }) {
   const price = Number(product.price);
 
+  const primaryImage =
+    product.product_images?.find(
+      (image) => image.is_primary
+    )?.image_url ||
+    product.product_images?.[0]?.image_url ||
+    "";
+
   return (
     <article className="market-product-card">
       <Link
         to={`/products/${product.id}`}
         className="market-product-image-link"
       >
-        <img
-          src={product.image_url}
-          alt={product.name}
-          className="market-product-image"
-        />
+        {primaryImage ? (
+          <img
+            src={primaryImage}
+            alt={product.name}
+            className="market-product-image"
+          />
+        ) : (
+          <div className="market-product-image-placeholder">
+            No Image
+          </div>
+        )}
       </Link>
 
       <div className="market-product-info">
@@ -52,3 +66,4 @@ function ProductCard({ product }) {
 }
 
 export default ProductCard;
+

@@ -222,15 +222,6 @@ function ProductDetails() {
 
       const variantsWithInventory =
         (variantData || []).map((variant) => {
-          /*
-            Supabase can return the one-to-one
-            inventory relationship as an object
-            or as an array depending on the
-            relationship/query.
-
-            Handle both formats.
-          */
-
           const inventoryData = variant.inventory;
 
           const inventory = Array.isArray(
@@ -311,6 +302,79 @@ function ProductDetails() {
       matchingVariant || null
     );
   }, [selectedOptions, variants]);
+
+  // ==========================================
+  // CHANGE IMAGE BASED ON COLOR
+  // ==========================================
+
+  useEffect(() => {
+    if (!product || images.length === 0) {
+      return;
+    }
+
+    // Only use automatic color image switching
+    // for Smart Watch X1 (product ID 6).
+    if (Number(product.id) !== 6) {
+      return;
+    }
+
+    const colorOption = options.find(
+      (option) =>
+        option.name.toLowerCase() === "color"
+    );
+
+    if (!colorOption) {
+      return;
+    }
+
+    const selectedColorValueId =
+      selectedOptions[colorOption.id];
+
+    if (!selectedColorValueId) {
+      return;
+    }
+
+    const selectedColor =
+      colorOption.product_option_values.find(
+        (value) =>
+          value.id === selectedColorValueId
+      );
+
+    if (!selectedColor) {
+      return;
+    }
+
+    const color = selectedColor.value
+      .trim()
+      .toLowerCase();
+
+    let imageMatch = null;
+
+    if (color === "black") {
+      imageMatch = images.find((image) =>
+        image.image_url
+          .toLowerCase()
+          .includes("x1_black")
+      );
+    }
+
+    if (color === "silver") {
+      imageMatch = images.find((image) =>
+        image.image_url
+          .toLowerCase()
+          .includes("x1_siliver")
+      );
+    }
+
+    if (imageMatch) {
+      setSelectedImage(imageMatch.image_url);
+    }
+  }, [
+    product,
+    images,
+    options,
+    selectedOptions,
+  ]);
 
   // ==========================================
   // SELECT OPTION
