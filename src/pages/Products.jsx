@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../service/supabase";
@@ -8,6 +9,7 @@ function Products() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     loadProducts();
@@ -51,6 +53,7 @@ function Products() {
     }
 
     setProducts(data || []);
+    setCurrentPage(1);
     setLoading(false);
   }
 
@@ -77,10 +80,41 @@ function Products() {
     return product.image_url;
   }
 
+  /*
+   * 4 products per page on phone.
+   * 8 products per page on larger screens.
+   */
+  const productsPerPage =
+    typeof window !== "undefined" && window.innerWidth <= 600
+      ? 4
+      : 8;
+
+  const totalPages = Math.ceil(
+    products.length / productsPerPage
+  );
+
+  const startIndex =
+    (currentPage - 1) * productsPerPage;
+
+  const currentProducts = products.slice(
+    startIndex,
+    startIndex + productsPerPage
+  );
+
+  function goToPage(page) {
+    setCurrentPage(page);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
   if (loading) {
     return (
       <>
         <Navbar />
+
         <div className="products-page">
           <div className="products-loading">
             <div className="loading-spinner"></div>
@@ -95,6 +129,7 @@ function Products() {
     return (
       <>
         <Navbar />
+
         <div className="products-page">
           <div className="products-error">
             <h2>Unable to load products.</h2>
@@ -112,96 +147,162 @@ function Products() {
   return (
     <>
       <Navbar />
+
       <div className="products-page">
-      <div className="products-container">
+        <div className="products-container">
 
-        {/* Header */}
-        <div className="products-header">
-          <div>
-            <h1>Products</h1>
-            <p>
-              Discover products from our marketplace.
-            </p>
+          {/* Header */}
+          <div className="products-header">
+            <div>
+              <h1>Products</h1>
+              <p>
+                Discover products from our marketplace.
+              </p>
+            </div>
+
+            <span className="product-count">
+              {products.length}{" "}
+              {products.length === 1
+                ? "product"
+                : "products"}
+            </span>
           </div>
 
-          <span className="product-count">
-            {products.length}{" "}
-            {products.length === 1 ? "product" : "products"}
-          </span>
-        </div>
+          {/* Empty */}
+          {products.length === 0 ? (
+            <div className="products-empty">
+              <h2>No products available</h2>
+              <p>
+                There are currently no products available.
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Product Grid */}
+              <div className="products-grid">
+                {currentProducts.map((product) => {
+                  const image = getProductImage(product);
 
-        {/* Empty */}
-        {products.length === 0 ? (
-          <div className="products-empty">
-            <h2>No products available</h2>
-            <p>
-              There are currently no products available.
-            </p>
-          </div>
-        ) : (
-          <div className="products-grid">
-
-            {products.map((product) => {
-              const image = getProductImage(product);
-
-              return (
-                <Link
-                  key={product.id}
-                  to={`/products/${product.id}`}
-                  className="product-card"
-                >
-                  {/* Image */}
-                  <div className="product-image-container">
-                    {image ? (
-                      <img
-                        src={image}
-                        alt={product.name}
-                        className="product-image"
-                      />
-                    ) : (
-                      <div className="product-image-placeholder">
-                        No Image
+                  return (
+                    <Link
+                      key={product.id}
+                      to={`/products/${product.id}`}
+                      className="product-card"
+                    >
+                      {/* Image */}
+                      <div className="product-image-container">
+                        {image ? (
+                          <img
+                            src={image}
+                            alt={
+                              product.product_images?.find(
+                                (img) =>
+                                  img.is_primary
+                              )?.alt_text ||
+                              product.name
+                            }
+                            className="product-image"
+                          />
+                        ) : (
+                          <div className="product-image-placeholder">
+                            No Image
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
 
-                  {/* Information */}
-                  <div className="product-info">
+                      {/* Information */}
+                      <div className="product-info">
 
-                    <div className="product-category">
-                      {product.categories?.name || "Uncategorized"}
-                    </div>
+                        <div className="product-category">
+                          {product.categories?.name ||
+                            "Uncategorized"}
+                        </div>
 
-                    <h2>{product.name}</h2>
+                        <h2>{product.name}</h2>
 
-                    {product.description && (
-                      <p className="product-description">
-                        {product.description}
-                      </p>
-                    )}
+                        {product.description && (
+                          <p className="product-description">
+                            {product.description}
+                          </p>
+                        )}
 
-                    <div className="product-bottom">
-                      <span className="product-price">
-                        ${Number(product.price).toFixed(2)}
-                      </span>
+                        <div className="product-bottom">
+                          <span className="product-price">
+                            $
+                            {Number(
+                              product.price
+                            ).toFixed(2)}
+                          </span>
 
-                      <span className="view-product">
-                        View →
-                      </span>
-                    </div>
+                          <span className="view-product">
+                            View →
+                          </span>
+                        </div>
 
-                  </div>
-                </Link>
-              );
-            })}
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
 
-          </div>
-        )}
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="products-pagination">
 
-      </div>
+                  <button
+                    type="button"
+                    className="pagination-button"
+                    disabled={currentPage === 1}
+                    onClick={() =>
+                      goToPage(currentPage - 1)
+                    }
+                  >
+                    ←
+                  </button>
+
+                  {Array.from(
+                    { length: totalPages },
+                    (_, index) => index + 1
+                  ).map((page) => (
+                    <button
+                      key={page}
+                      type="button"
+                      className={`pagination-number ${
+                        currentPage === page
+                          ? "active"
+                          : ""
+                      }`}
+                      onClick={() =>
+                        goToPage(page)
+                      }
+                    >
+                      {page}
+                    </button>
+                  ))}
+
+                  <button
+                    type="button"
+                    className="pagination-button"
+                    disabled={
+                      currentPage === totalPages
+                    }
+                    onClick={() =>
+                      goToPage(currentPage + 1)
+                    }
+                  >
+                    →
+                  </button>
+
+                </div>
+              )}
+            </>
+          )}
+
+        </div>
       </div>
     </>
   );
 }
 
 export default Products;
+
