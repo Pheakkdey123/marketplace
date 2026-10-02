@@ -16,6 +16,9 @@ import Profile from "./pages/Profile";
 import OrderSuccess from "./pages/OrderSuccess";
 
 import ProtectedRoute from "./components/ProtectedRoute";
+import SellerDashboard from "./pages/SellerDashboard";
+import SellerProducts from "./pages/SellerProducts";
+import AddProduct from "./pages/seller/AddProduct";
 
 import { CartProvider } from "./context/CartContext";
 
@@ -110,7 +113,19 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/seller"
+            element={<SellerDashboard />}
+          />
+          <Route
+            path="/seller/products"
+            element={<SellerProducts />}
+            />
 
+          <Route
+            path="/seller/products/new"
+            element={<AddProduct />}
+          />
           {/* 404 */}
           <Route
             path="*"

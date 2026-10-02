@@ -1,8 +1,7 @@
-
 import { useEffect, useState } from "react";
-import { supabase } from "../services/supabase";
+import { Link } from "react-router-dom";
+import { supabase } from "../service/supabase";
 import Navbar from "../components/Navbar";
-import ProductCard from "../components/ProductCard";
 import "../styles/Products.css";
 
 function Products() {
@@ -11,86 +10,198 @@ function Products() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    async function loadProducts() {
-      setLoading(true);
-      setError("");
-
-      const { data, error } = await supabase
-        .from("products")
-        .select(`
-          *,
-          product_images (
-            id,
-            image_url,
-            alt_text,
-            sort_order,
-            is_primary
-          )
-        `)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Load products error:", error);
-        setError(error.message);
-        setProducts([]);
-      } else {
-        setProducts(data || []);
-      }
-
-      setLoading(false);
-    }
-
     loadProducts();
   }, []);
 
-  return (
-    <div className="products-page">
-      <Navbar />
+  async function loadProducts() {
+    setLoading(true);
+    setError("");
 
-      <main className="products-content">
-        <div className="products-header">
-          <p className="products-small">OUR PRODUCTS</p>
+    const { data, error } = await supabase
+      .from("products")
+      .select(`
+        id,
+        name,
+        description,
+        price,
+        image_url,
+        is_active,
+        created_at,
+        category_id,
+        categories (
+          id,
+          name
+        ),
+        product_images (
+          id,
+          image_url,
+          alt_text,
+          sort_order,
+          is_primary
+        )
+      `)
+      .eq("is_active", true)
+      .order("created_at", { ascending: false });
 
-          <h1>All Products</h1>
+    if (error) {
+      console.error("Load products error:", error);
+      setError(error.message);
+      setLoading(false);
+      return;
+    }
 
-          <p className="products-description">
-            Browse our collection and find something you like.
-          </p>
-        </div>
+    setProducts(data || []);
+    setLoading(false);
+  }
 
-        {loading && (
-          <div className="products-status">
+  function getProductImage(product) {
+    if (
+      product.product_images &&
+      product.product_images.length > 0
+    ) {
+      const primaryImage = product.product_images.find(
+        (image) => image.is_primary
+      );
+
+      if (primaryImage) {
+        return primaryImage.image_url;
+      }
+
+      const sortedImages = [...product.product_images].sort(
+        (a, b) => a.sort_order - b.sort_order
+      );
+
+      return sortedImages[0]?.image_url || product.image_url;
+    }
+
+    return product.image_url;
+  }
+
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <div className="products-page">
+          <div className="products-loading">
+            <div className="loading-spinner"></div>
             <p>Loading products...</p>
           </div>
-        )}
+        </div>
+      </>
+    );
+  }
 
-        {error && !loading && (
+  if (error) {
+    return (
+      <>
+        <Navbar />
+        <div className="products-page">
           <div className="products-error">
-            <p>Unable to load products.</p>
-            <span>{error}</span>
-          </div>
-        )}
+            <h2>Unable to load products.</h2>
+            <p>{error}</p>
 
-        {!loading && !error && products.length === 0 && (
-          <div className="products-status">
-            <p>No products available.</p>
+            <button onClick={loadProducts}>
+              Try Again
+            </button>
           </div>
-        )}
+        </div>
+      </>
+    );
+  }
 
-        {!loading && !error && products.length > 0 && (
+  return (
+    <>
+      <Navbar />
+      <div className="products-page">
+      <div className="products-container">
+
+        {/* Header */}
+        <div className="products-header">
+          <div>
+            <h1>Products</h1>
+            <p>
+              Discover products from our marketplace.
+            </p>
+          </div>
+
+          <span className="product-count">
+            {products.length}{" "}
+            {products.length === 1 ? "product" : "products"}
+          </span>
+        </div>
+
+        {/* Empty */}
+        {products.length === 0 ? (
+          <div className="products-empty">
+            <h2>No products available</h2>
+            <p>
+              There are currently no products available.
+            </p>
+          </div>
+        ) : (
           <div className="products-grid">
-            {products.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-              />
-            ))}
+
+            {products.map((product) => {
+              const image = getProductImage(product);
+
+              return (
+                <Link
+                  key={product.id}
+                  to={`/products/${product.id}`}
+                  className="product-card"
+                >
+                  {/* Image */}
+                  <div className="product-image-container">
+                    {image ? (
+                      <img
+                        src={image}
+                        alt={product.name}
+                        className="product-image"
+                      />
+                    ) : (
+                      <div className="product-image-placeholder">
+                        No Image
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Information */}
+                  <div className="product-info">
+
+                    <div className="product-category">
+                      {product.categories?.name || "Uncategorized"}
+                    </div>
+
+                    <h2>{product.name}</h2>
+
+                    {product.description && (
+                      <p className="product-description">
+                        {product.description}
+                      </p>
+                    )}
+
+                    <div className="product-bottom">
+                      <span className="product-price">
+                        ${Number(product.price).toFixed(2)}
+                      </span>
+
+                      <span className="view-product">
+                        View →
+                      </span>
+                    </div>
+
+                  </div>
+                </Link>
+              );
+            })}
+
           </div>
         )}
-      </main>
-    </div>
+
+      </div>
+      </div>
+    </>
   );
 }
 
 export default Products;
-

@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { supabase } from "../services/supabase";
+import { supabase } from "../service/supabase";
 import "../styles/Signup.css";
 
 function Signup() {

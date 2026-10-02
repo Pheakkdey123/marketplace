@@ -1,0 +1,137 @@
+
+.seller-dashboard-page {
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+.seller-dashboard {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 50px 24px 80px;
+}
+
+.seller-dashboard-header {
+  margin-bottom: 40px;
+}
+
+.seller-dashboard-small {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #64748b;
+}
+
+.seller-dashboard-header h1 {
+  margin: 0;
+  font-size: 36px;
+  color: #111827;
+}
+
+.seller-dashboard-header p:last-child {
+  margin-top: 10px;
+  color: #64748b;
+}
+
+/* Main navigation cards */
+
+.seller-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.seller-dashboard-card {
+  display: block;
+  padding: 28px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  text-decoration: none;
+  color: inherit;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.seller-dashboard-card:hover {
+  transform: translateY(-3px);
+  border-color: #d1d5db;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+.seller-dashboard-icon {
+  font-size: 32px;
+  margin-bottom: 18px;
+}
+
+.seller-dashboard-card h2 {
+  margin: 0 0 8px;
+  font-size: 21px;
+  color: #111827;
+}
+
+.seller-dashboard-card p {
+  margin: 0;
+  line-height: 1.6;
+  color: #64748b;
+}
+
+/* Statistics */
+
+.seller-dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.seller-stat-card {
+  padding: 22px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+}
+
+.seller-stat-card span {
+  display: block;
+  margin-bottom: 8px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.seller-stat-card strong {
+  display: block;
+  font-size: 25px;
+  color: #111827;
+}
+
+/* Tablet */
+
+@media (max-width: 900px) {
+  .seller-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .seller-dashboard-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Mobile */
+
+@media (max-width: 600px) {
+  .seller-dashboard {
+    padding: 32px 16px 60px;
+  }
+
+  .seller-dashboard-header h1 {
+    font-size: 30px;
+  }
+
+  .seller-dashboard-stats {
+    grid-template-columns: 1fr;
+  }
+}
+

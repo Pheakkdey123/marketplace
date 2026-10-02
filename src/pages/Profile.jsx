@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "../services/supabase";
+import { supabase } from "../service/supabase";
 import Navbar from "../components/Navbar";
 import "../styles/Profile.css";
 

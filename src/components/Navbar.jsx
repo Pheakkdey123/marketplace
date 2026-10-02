@@ -1,11 +1,13 @@
-
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "../services/supabase";
+import { supabase } from "../service/supabase";
+import { useCart } from "../context/CartContext";
 import "../styles/Navbar.css";
 
 function Navbar() {
   const [user, setUser] = useState(null);
+
+  const { cartCount } = useCart();
 
   useEffect(() => {
     async function getUser() {
@@ -38,6 +40,7 @@ function Navbar() {
   return (
     <header className="navbar">
       <div className="navbar-inner">
+
         <Link to="/" className="navbar-logo">
           Marketplace
         </Link>
@@ -48,6 +51,7 @@ function Navbar() {
         </nav>
 
         <div className="navbar-actions">
+
           {user ? (
             <>
               <Link to="/profile" className="signin-btn">
@@ -60,6 +64,12 @@ function Navbar() {
                 aria-label="Shopping cart"
               >
                 🛒
+
+                {cartCount > 0 && (
+                  <span className="cart-badge">
+                    {cartCount > 99 ? "99+" : cartCount}
+                  </span>
+                )}
               </Link>
 
               <button
@@ -86,9 +96,16 @@ function Navbar() {
                 aria-label="Shopping cart"
               >
                 🛒
+
+                {cartCount > 0 && (
+                  <span className="cart-badge">
+                    {cartCount > 99 ? "99+" : cartCount}
+                  </span>
+                )}
               </Link>
             </>
           )}
+
         </div>
       </div>
     </header>
@@ -96,4 +113,3 @@ function Navbar() {
 }
 
 export default Navbar;
-

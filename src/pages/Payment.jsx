@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { supabase } from "../services/supabase";
+import { supabase } from "../service/supabase";
 import "../styles/Payment.css";
 
 function Payment() {

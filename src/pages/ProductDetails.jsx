@@ -1,7 +1,6 @@
-
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { supabase } from "../services/supabase";
+import { supabase } from "../service/supabase";
 import { useCart } from "../context/CartContext";
 import Navbar from "../components/Navbar";
 import "../styles/ProductDetails.css";
@@ -9,173 +8,104 @@ import "../styles/ProductDetails.css";
 function ProductDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const { addToCart } = useCart();
 
   const [product, setProduct] = useState(null);
   const [images, setImages] = useState([]);
-  const [selectedImage, setSelectedImage] = useState("");
-
-  const [options, setOptions] = useState([]);
   const [variants, setVariants] = useState([]);
-  const [selectedOptions, setSelectedOptions] = useState({});
+
   const [selectedVariant, setSelectedVariant] = useState(null);
+  const [selectedImage, setSelectedImage] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
-    async function loadProduct() {
+    loadProduct();
+  }, [id]);
+
+  async function loadProduct() {
+    try {
       setLoading(true);
       setError("");
 
-      // ==========================================
+      // =========================================
       // LOAD PRODUCT
-      // ==========================================
+      // =========================================
 
       const {
         data: productData,
         error: productError,
       } = await supabase
         .from("products")
-        .select("*")
+        .select(`
+          id,
+          name,
+          description,
+          price,
+          image_url,
+          is_active,
+          created_at
+        `)
         .eq("id", id)
+        .eq("is_active", true)
         .single();
 
       if (productError) {
-        setError(productError.message);
-        setLoading(false);
-        return;
+        throw productError;
       }
 
       setProduct(productData);
 
-      // ==========================================
+      // =========================================
       // LOAD PRODUCT IMAGES
-      // ==========================================
+      // =========================================
 
       const {
         data: imageData,
         error: imageError,
       } = await supabase
         .from("product_images")
-        .select("*")
+        .select(`
+          id,
+          image_url,
+          alt_text,
+          sort_order,
+          is_primary
+        `)
         .eq("product_id", id)
+        .order("is_primary", {
+          ascending: false,
+        })
         .order("sort_order", {
           ascending: true,
         });
 
       if (imageError) {
-        console.error(
-          "Load product images error:",
-          imageError
-        );
-
-        if (productData.image_url) {
-          const fallbackImage = {
-            id: "fallback",
-            image_url: productData.image_url,
-            alt_text: productData.name,
-            sort_order: 0,
-            is_primary: true,
-          };
-
-          setImages([fallbackImage]);
-          setSelectedImage(productData.image_url);
-        }
-      } else {
-        const loadedImages = imageData || [];
-
-        if (loadedImages.length > 0) {
-          setImages(loadedImages);
-
-          const primaryImage =
-            loadedImages.find(
-              (image) => image.is_primary
-            ) || loadedImages[0];
-
-          setSelectedImage(primaryImage.image_url);
-        } else if (productData.image_url) {
-          const fallbackImage = {
-            id: "fallback",
-            image_url: productData.image_url,
-            alt_text: productData.name,
-            sort_order: 0,
-            is_primary: true,
-          };
-
-          setImages([fallbackImage]);
-          setSelectedImage(productData.image_url);
-        }
+        throw imageError;
       }
 
-      // ==========================================
-      // LOAD PRODUCT OPTIONS
-      // ==========================================
+      const loadedImages = imageData || [];
 
-      const {
-        data: optionData,
-        error: optionError,
-      } = await supabase
-        .from("product_options")
-        .select(`
-          id,
-          name,
-          sort_order,
-          is_active,
-          product_option_values (
-            id,
-            value,
-            sort_order,
-            is_active
-          )
-        `)
-        .eq("product_id", id)
-        .eq("is_active", true)
-        .order("sort_order", {
-          ascending: true,
-        });
+      setImages(loadedImages);
 
-      if (optionError) {
-        console.error(
-          "Load product options error:",
-          optionError
+      if (loadedImages.length > 0) {
+        setSelectedImage(
+          loadedImages[0].image_url
+        );
+      } else if (productData.image_url) {
+        setSelectedImage(
+          productData.image_url
         );
       } else {
-        const loadedOptions = (optionData || []).map(
-          (option) => ({
-            ...option,
-            product_option_values: (
-              option.product_option_values || []
-            )
-              .filter(
-                (value) => value.is_active
-              )
-              .sort(
-                (a, b) =>
-                  a.sort_order - b.sort_order
-              ),
-          })
-        );
-
-        setOptions(loadedOptions);
-
-        const initialSelections = {};
-
-        loadedOptions.forEach((option) => {
-          if (
-            option.product_option_values.length > 0
-          ) {
-            initialSelections[option.id] =
-              option.product_option_values[0].id;
-          }
-        });
-
-        setSelectedOptions(initialSelections);
+        setSelectedImage("");
       }
 
-      // ==========================================
-      // LOAD VARIANTS + INVENTORY
-      // ==========================================
+      // =========================================
+      // LOAD VARIANTS
+      // =========================================
 
       const {
         data: variantData,
@@ -188,16 +118,7 @@ function ProductDetails() {
           sku,
           name,
           price,
-          is_active,
-
-          product_variant_options (
-            option_value_id
-          ),
-
-          inventory (
-            quantity,
-            reserved_quantity
-          )
+          is_active
         `)
         .eq("product_id", id)
         .eq("is_active", true)
@@ -206,324 +127,287 @@ function ProductDetails() {
         });
 
       if (variantError) {
-        console.error(
-          "Load product variants error:",
-          variantError
-        );
-
-        setError(variantError.message);
-        setLoading(false);
-        return;
+        throw variantError;
       }
 
-      // ==========================================
-      // CALCULATE AVAILABLE STOCK
-      // ==========================================
+      const loadedVariants =
+        variantData || [];
 
-      const variantsWithInventory =
-        (variantData || []).map((variant) => {
-          const inventoryData = variant.inventory;
+      // =========================================
+      // LOAD INVENTORY
+      // =========================================
 
-          const inventory = Array.isArray(
-            inventoryData
-          )
-            ? inventoryData[0]
-            : inventoryData;
+      let inventoryData = [];
 
-          const quantity =
-            Number(inventory?.quantity) || 0;
-
-          const reservedQuantity =
-            Number(
-              inventory?.reserved_quantity
-            ) || 0;
-
-          const availableStock =
-            quantity - reservedQuantity;
-
-          return {
-            ...variant,
-            available_stock: availableStock,
-          };
-        });
-
-      console.log(
-        "Variants with inventory:",
-        variantsWithInventory
-      );
-
-      setVariants(variantsWithInventory);
-
-      setLoading(false);
-    }
-
-    loadProduct();
-  }, [id]);
-
-  // ==========================================
-  // FIND SELECTED VARIANT
-  // ==========================================
-
-  useEffect(() => {
-    if (
-      variants.length === 0 ||
-      Object.keys(selectedOptions).length === 0
-    ) {
-      setSelectedVariant(null);
-      return;
-    }
-
-    const selectedValueIds =
-      Object.values(selectedOptions);
-
-    const matchingVariant = variants.find(
-      (variant) => {
-        const variantValueIds = (
-          variant.product_variant_options || []
-        ).map(
-          (item) => item.option_value_id
+      const variantIds =
+        loadedVariants.map(
+          (variant) => variant.id
         );
 
-        if (
-          variantValueIds.length !==
-          selectedValueIds.length
-        ) {
-          return false;
+      if (variantIds.length > 0) {
+        const {
+          data,
+          error: inventoryError,
+        } = await supabase
+          .from("inventory")
+          .select(`
+            variant_id,
+            quantity,
+            reserved_quantity
+          `)
+          .in(
+            "variant_id",
+            variantIds
+          );
+
+        if (inventoryError) {
+          throw inventoryError;
         }
 
-        return selectedValueIds.every(
-          (valueId) =>
-            variantValueIds.includes(valueId)
+        inventoryData = data || [];
+      }
+
+      // =========================================
+      // COMBINE VARIANT + INVENTORY
+      // =========================================
+
+      const finalVariants =
+        loadedVariants.map(
+          (variant) => {
+            const inventory =
+              inventoryData.find(
+                (item) =>
+                  item.variant_id ===
+                  variant.id
+              );
+
+            const quantity = Number(
+              inventory?.quantity ?? 0
+            );
+
+            const reservedQuantity =
+              Number(
+                inventory?.reserved_quantity ??
+                  0
+              );
+
+            const availableStock =
+              Math.max(
+                0,
+                quantity -
+                  reservedQuantity
+              );
+
+            return {
+              ...variant,
+
+              variant_price: Number(
+                variant.price ??
+                  productData.price ??
+                  0
+              ),
+
+              variant_stock:
+                availableStock,
+            };
+          }
+        );
+
+      setVariants(finalVariants);
+
+      if (finalVariants.length > 0) {
+        setSelectedVariant(
+          finalVariants[0]
         );
       }
-    );
-
-    setSelectedVariant(
-      matchingVariant || null
-    );
-  }, [selectedOptions, variants]);
-
-  // ==========================================
-  // CHANGE IMAGE BASED ON COLOR
-  // ==========================================
-
-  useEffect(() => {
-    if (!product || images.length === 0) {
-      return;
-    }
-
-    // Only use automatic color image switching
-    // for Smart Watch X1 (product ID 6).
-    if (Number(product.id) !== 6) {
-      return;
-    }
-
-    const colorOption = options.find(
-      (option) =>
-        option.name.toLowerCase() === "color"
-    );
-
-    if (!colorOption) {
-      return;
-    }
-
-    const selectedColorValueId =
-      selectedOptions[colorOption.id];
-
-    if (!selectedColorValueId) {
-      return;
-    }
-
-    const selectedColor =
-      colorOption.product_option_values.find(
-        (value) =>
-          value.id === selectedColorValueId
+    } catch (err) {
+      console.error(
+        "Product details error:",
+        err
       );
 
-    if (!selectedColor) {
-      return;
-    }
-
-    const color = selectedColor.value
-      .trim()
-      .toLowerCase();
-
-    let imageMatch = null;
-
-    if (color === "black") {
-      imageMatch = images.find((image) =>
-        image.image_url
-          .toLowerCase()
-          .includes("x1_black")
+      setError(
+        err.message ||
+          "Unable to load product."
       );
+    } finally {
+      setLoading(false);
     }
+  }
 
-    if (color === "silver") {
-      imageMatch = images.find((image) =>
-        image.image_url
-          .toLowerCase()
-          .includes("x1_siliver")
-      );
-    }
+  // =========================================
+  // TOAST
+  // =========================================
 
-    if (imageMatch) {
-      setSelectedImage(imageMatch.image_url);
-    }
-  }, [
-    product,
-    images,
-    options,
-    selectedOptions,
-  ]);
+  function showMessage(text) {
+    setMessage(text);
 
-  // ==========================================
-  // SELECT OPTION
-  // ==========================================
+    setTimeout(() => {
+      setMessage("");
+    }, 2500);
+  }
 
-  const handleOptionChange = (
-    optionId,
-    valueId
-  ) => {
-    setSelectedOptions((current) => ({
-      ...current,
-      [optionId]: valueId,
-    }));
-  };
-
-  // ==========================================
-  // CREATE CART ITEM
-  // ==========================================
-
-  const createCartItem = () => {
-    if (!selectedVariant) {
-      return null;
-    }
-
-    return {
-      ...product,
-
-      variant_id:
-        selectedVariant.id,
-
-      variant_sku:
-        selectedVariant.sku,
-
-      variant_name:
-        selectedVariant.name,
-
-      variant_price:
-        selectedVariant.price ??
-        product.price,
-
-      variant_stock:
-        selectedVariant.available_stock,
-    };
-  };
-
-  // ==========================================
+  // =========================================
   // ADD TO CART
-  // ==========================================
+  // =========================================
 
-  const handleAddToCart = () => {
+  async function handleAddToCart() {
+    if (!product) {
+      return;
+    }
+
     if (!selectedVariant) {
-      alert(
-        "Please select product options."
+      showMessage(
+        "Please select a variant."
       );
       return;
     }
 
     if (
-      selectedVariant.available_stock <= 0
+      selectedVariant.variant_stock <= 0
     ) {
-      alert(
-        "This variant is out of stock."
+      showMessage(
+        "This product is out of stock."
       );
       return;
     }
 
-    const cartItem = createCartItem();
+    const result =
+      await addToCart({
+        id: product.id,
+        name: product.name,
+        description: product.description,
 
-    if (cartItem) {
-      addToCart(cartItem);
+        image_url:
+          selectedImage ||
+          product.image_url ||
+          "",
+
+        variant_id:
+          selectedVariant.id,
+
+        variant_name:
+          selectedVariant.name,
+
+        sku:
+          selectedVariant.sku,
+
+        variant_price:
+          selectedVariant.variant_price,
+
+        variant_stock:
+          selectedVariant.variant_stock,
+      });
+
+    if (result?.success) {
+      showMessage(
+        "Product added to cart."
+      );
+    } else {
+      showMessage(
+        result?.error ||
+          "Unable to add product to cart."
+      );
     }
-  };
+  }
 
-  // ==========================================
+  // =========================================
   // BUY NOW
-  // ==========================================
+  // =========================================
 
-  const handleBuyNow = async () => {
+  async function handleBuyNow() {
+    if (!product) {
+      return;
+    }
+
     if (!selectedVariant) {
-      alert(
-        "Please select product options."
+      showMessage(
+        "Please select a variant."
       );
       return;
     }
 
     if (
-      selectedVariant.available_stock <= 0
+      selectedVariant.variant_stock <= 0
     ) {
-      alert(
-        "This variant is out of stock."
+      showMessage(
+        "This product is out of stock."
       );
       return;
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const result =
+      await addToCart({
+        id: product.id,
+        name: product.name,
+        description: product.description,
 
-    if (!user) {
-      navigate(
-        `/login?redirect=${encodeURIComponent(
-          `/products/${id}`
-        )}`
+        image_url:
+          selectedImage ||
+          product.image_url ||
+          "",
+
+        variant_id:
+          selectedVariant.id,
+
+        variant_name:
+          selectedVariant.name,
+
+        sku:
+          selectedVariant.sku,
+
+        variant_price:
+          selectedVariant.variant_price,
+
+        variant_stock:
+          selectedVariant.variant_stock,
+      });
+
+    if (!result?.success) {
+      showMessage(
+        result?.error ||
+          "Unable to buy this product."
       );
 
       return;
-    }
-
-    const cartItem = createCartItem();
-
-    if (cartItem) {
-      addToCart(cartItem);
     }
 
     navigate("/checkout");
-  };
+  }
 
-  // ==========================================
+  // =========================================
   // LOADING
-  // ==========================================
+  // =========================================
 
   if (loading) {
     return (
-      <div className="home">
+      <>
         <Navbar />
 
-        <main className="featured">
+        <div className="product-details-page">
           <div className="product-details-loading">
             Loading product...
           </div>
-        </main>
-      </div>
+        </div>
+      </>
     );
   }
 
-  // ==========================================
+  // =========================================
   // ERROR
-  // ==========================================
+  // =========================================
 
   if (error || !product) {
     return (
-      <div className="home">
+      <>
         <Navbar />
 
-        <main className="featured">
+        <div className="product-details-page">
           <div className="product-details-error">
-            <h1>
+
+            <h2>
               Product not found
-            </h1>
+            </h2>
 
             {error && (
               <p>{error}</p>
@@ -532,240 +416,315 @@ function ProductDetails() {
             <Link to="/products">
               ← Back to products
             </Link>
+
           </div>
-        </main>
-      </div>
+        </div>
+      </>
     );
   }
 
-  // ==========================================
-  // DISPLAY VALUES
-  // ==========================================
+  // =========================================
+  // CURRENT PRICE / STOCK
+  // =========================================
 
-  const displayPrice =
-    selectedVariant?.price ??
-    product.price;
+  const currentPrice =
+    selectedVariant
+      ? selectedVariant.variant_price
+      : Number(product.price || 0);
 
-  const displayStock =
-    selectedVariant?.available_stock ?? 0;
-
-  const isOutOfStock =
-    !selectedVariant ||
-    displayStock <= 0;
-
-  // ==========================================
-  // PAGE
-  // ==========================================
+  const currentStock =
+    selectedVariant
+      ? selectedVariant.variant_stock
+      : 0;
 
   return (
-    <div className="home">
+    <>
+      {/* =====================================
+          NAVBAR
+      ====================================== */}
+
       <Navbar />
 
-      <main className="featured">
+      {/* =====================================
+          PRODUCT PAGE
+      ====================================== */}
 
-        <Link
-          to="/products"
-          className="view-all"
-        >
-          ← Back to products
-        </Link>
+      <div className="product-details-page">
 
-        <div className="product-details-layout">
+        {/* =====================================
+            TOAST
+        ====================================== */}
 
-          {/* ====================================
-              GALLERY
+        {message && (
+          <div className="cart-message">
+
+            <div className="cart-message-icon">
+              ✓
+            </div>
+
+            <div className="cart-message-text">
+              {message}
+            </div>
+
+          </div>
+        )}
+
+        <div className="product-details-container">
+
+          {/* ===================================
+              BACK BUTTON
           ==================================== */}
 
-          <div className="product-gallery">
+          <Link
+            to="/products"
+            className="product-back-link"
+          >
+            ← Back to products
+          </Link>
 
-            <div className="product-main-image">
+          <div className="product-details-content">
 
-              {selectedImage && (
-                <img
-                  src={selectedImage}
-                  alt={product.name}
-                />
+            {/* =================================
+                LEFT - IMAGE GALLERY
+            ================================== */}
+
+            <div className="product-gallery">
+
+              <div className="product-main-image">
+
+                {selectedImage ? (
+                  <img
+                    src={selectedImage}
+                    alt={product.name}
+                  />
+                ) : (
+                  <div className="no-image">
+                    No image available
+                  </div>
+                )}
+
+              </div>
+
+              {/* =================================
+                  THUMBNAILS
+              ================================== */}
+
+              {images.length > 0 && (
+                <div className="product-thumbnails">
+
+                  {images.map(
+                    (image) => (
+                      <button
+                        key={image.id}
+                        type="button"
+                        className={`product-thumbnail ${
+                          selectedImage ===
+                          image.image_url
+                            ? "active"
+                            : ""
+                        }`}
+                        onClick={() =>
+                          setSelectedImage(
+                            image.image_url
+                          )
+                        }
+                        aria-label={`Select image ${
+                          image.sort_order + 1
+                        }`}
+                      >
+                        <img
+                          src={
+                            image.image_url
+                          }
+                          alt={
+                            image.alt_text ||
+                            product.name
+                          }
+                        />
+                      </button>
+                    )
+                  )}
+
+                </div>
               )}
 
             </div>
 
-            {images.length > 1 && (
-              <div className="product-thumbnails">
-
-                {images.map((image) => (
-                  <button
-                    key={image.id}
-                    type="button"
-                    className={`product-thumbnail ${
-                      selectedImage ===
-                      image.image_url
-                        ? "active"
-                        : ""
-                    }`}
-                    onClick={() =>
-                      setSelectedImage(
-                        image.image_url
-                      )
-                    }
-                  >
-                    <img
-                      src={image.image_url}
-                      alt={
-                        image.alt_text ||
-                        product.name
-                      }
-                    />
-                  </button>
-                ))}
-
-              </div>
-            )}
-
-          </div>
-
-          {/* ====================================
-              PRODUCT INFORMATION
-          ==================================== */}
-
-          <div className="product-details-info">
-
-            <p className="section-small">
-              {product.category}
-            </p>
-
-            <h1>
-              {product.name}
-            </h1>
-
-            <h2 className="product-details-price">
-              $
-              {Number(displayPrice).toFixed(2)}
-            </h2>
-
-            {product.description && (
-              <p className="product-details-description">
-                {product.description}
-              </p>
-            )}
-
-            {/* ==================================
-                OPTIONS
+            {/* =================================
+                RIGHT - PRODUCT INFORMATION
             ================================== */}
 
-            {options.length > 0 && (
-              <div className="product-options">
+            <div className="product-info">
 
-                {options.map((option) => (
-                  <div
-                    key={option.id}
-                    className="product-option-group"
-                  >
+              <h1 className="product-title">
+                {product.name}
+              </h1>
 
-                    <h3>
-                      {option.name}
-                    </h3>
+              <div className="product-price">
+                ${currentPrice.toFixed(2)}
+              </div>
 
-                    <div className="product-option-values">
+              {/* =================================
+                  VARIANTS
+              ================================== */}
 
-                      {option.product_option_values.map(
-                        (value) => (
-                          <button
-                            key={value.id}
-                            type="button"
-                            className={`product-option-value ${
-                              selectedOptions[
-                                option.id
-                              ] === value.id
-                                ? "selected"
-                                : ""
-                            }`}
-                            onClick={() =>
-                              handleOptionChange(
-                                option.id,
-                                value.id
-                              )
+              {variants.length > 0 && (
+                <div className="product-variants">
+
+                  <h3>
+                    Variant
+                  </h3>
+
+                  <div className="variant-list">
+
+                    {variants.map(
+                      (variant) => (
+                        <button
+                          key={variant.id}
+                          type="button"
+                          className={`variant-button ${
+                            selectedVariant?.id ===
+                            variant.id
+                              ? "selected"
+                              : ""
+                          } ${
+                            variant.variant_stock <=
+                            0
+                              ? "disabled"
+                              : ""
+                          }`}
+                          onClick={() => {
+                            if (
+                              variant.variant_stock >
+                              0
+                            ) {
+                              setSelectedVariant(
+                                variant
+                              );
                             }
-                          >
-                            {value.value}
-                          </button>
-                        )
-                      )}
+                          }}
+                          disabled={
+                            variant.variant_stock <=
+                            0
+                          }
+                        >
 
-                    </div>
+                          <span className="variant-name">
+                            {variant.name}
+                          </span>
+
+                          <span className="variant-price">
+                            $
+                            {variant.variant_price.toFixed(
+                              2
+                            )}
+                          </span>
+
+                        </button>
+                      )
+                    )}
 
                   </div>
-                ))}
+
+                </div>
+              )}
+
+              {/* =================================
+                  STOCK
+              ================================== */}
+
+              <div className="product-stock">
+
+                {currentStock > 0 ? (
+                  <>
+                    <span className="stock-label">
+                      In stock
+                    </span>
+
+                    <span className="stock-number">
+                      {currentStock} available
+                    </span>
+                  </>
+                ) : (
+                  <span className="out-of-stock">
+                    Out of stock
+                  </span>
+                )}
 
               </div>
-            )}
 
-            {/* ==================================
-                SELECTED VARIANT
-            ================================== */}
+              {/* =================================
+                  SKU
+              ================================== */}
 
-            {selectedVariant && (
-              <div className="selected-variant">
+              {selectedVariant?.sku && (
+                <div className="product-sku">
+                  SKU: {selectedVariant.sku}
+                </div>
+              )}
+
+              {/* =================================
+                  ACTION BUTTONS
+              ================================== */}
+
+              <div className="product-action-buttons">
+
+                <button
+                  type="button"
+                  className="add-to-cart-button"
+                  onClick={
+                    handleAddToCart
+                  }
+                  disabled={
+                    !selectedVariant ||
+                    currentStock <= 0
+                  }
+                >
+                  {currentStock > 0
+                    ? "Add to Cart"
+                    : "Out of Stock"}
+                </button>
+
+                <button
+                  type="button"
+                  className="buy-now-button"
+                  onClick={
+                    handleBuyNow
+                  }
+                  disabled={
+                    !selectedVariant ||
+                    currentStock <= 0
+                  }
+                >
+                  Buy Now
+                </button>
+
+              </div>
+
+              {/* =================================
+                  DESCRIPTION
+              ================================== */}
+
+              <div className="product-description">
+
+                <h2>
+                  Description
+                </h2>
 
                 <p>
-                  SKU:
-                  <strong>
-                    {selectedVariant.sku}
-                  </strong>
+                  {product.description ||
+                    "No description available."}
                 </p>
 
               </div>
-            )}
-
-            {/* ==================================
-                STOCK
-            ================================== */}
-
-            <p className="product-details-stock">
-              Stock: {displayStock}
-            </p>
-
-            {/* ==================================
-                ACTIONS
-            ================================== */}
-
-            <div className="product-details-actions">
-
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                disabled={isOutOfStock}
-                className="product-add-cart"
-              >
-                {!selectedVariant
-                  ? "Select Options"
-                  : displayStock > 0
-                  ? "Add to Cart"
-                  : "Out of Stock"}
-              </button>
-
-              <button
-                type="button"
-                onClick={handleBuyNow}
-                disabled={isOutOfStock}
-                className="product-buy-now"
-              >
-                {!selectedVariant
-                  ? "Select Options"
-                  : displayStock > 0
-                  ? "Buy Now"
-                  : "Out of Stock"}
-              </button>
 
             </div>
 
           </div>
-
         </div>
-
-      </main>
-    </div>
+      </div>
+    </>
   );
 }
 
 export default ProductDetails;
-
