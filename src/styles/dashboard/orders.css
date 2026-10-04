@@ -1,0 +1,282 @@
+.orders-dashboard-page {
+  min-height: 100vh;
+  padding: 32px;
+  background: #f7f8fa;
+}
+
+/* Header */
+
+.orders-page-header {
+  margin-bottom: 28px;
+}
+
+.orders-page-header h1 {
+  margin: 0;
+  color: #111827;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.orders-page-header p {
+  margin: 6px 0 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* Stats */
+
+.orders-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.orders-stat-card {
+  padding: 20px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.orders-stat-card span {
+  display: block;
+  margin-bottom: 8px;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.orders-stat-card strong {
+  color: #111827;
+  font-size: 26px;
+}
+
+/* Toolbar */
+
+.orders-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 18px;
+}
+
+.orders-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 360px;
+  height: 42px;
+  padding: 0 13px;
+  box-sizing: border-box;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.orders-search input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  font-size: 14px;
+}
+
+.orders-status-filter {
+  height: 42px;
+  padding: 0 15px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  color: #374151;
+  cursor: pointer;
+}
+
+/* Table */
+
+.orders-table-card {
+  overflow: hidden;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.orders-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.orders-table {
+  width: 100%;
+  min-width: 800px;
+  border-collapse: collapse;
+}
+
+.orders-table th {
+  padding: 15px 18px;
+  background: #fafafa;
+  border-bottom: 1px solid #e5e7eb;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.orders-table td {
+  padding: 16px 18px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #374151;
+  font-size: 14px;
+}
+
+.orders-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Status */
+
+.order-status {
+  display: inline-flex;
+  padding: 5px 9px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.order-status.pending {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.order-status.processing {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.order-status.completed {
+  background: #ecfdf3;
+  color: #15803d;
+}
+
+.order-status.cancelled {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+/* Action */
+
+.order-view-button {
+  border: none;
+  background: transparent;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Loading */
+
+.orders-loading {
+  padding: 80px 20px;
+  text-align: center;
+  color: #6b7280;
+}
+
+/* Empty */
+
+.orders-empty {
+  padding: 90px 20px;
+  text-align: center;
+}
+
+.orders-empty-icon {
+  margin-bottom: 15px;
+  font-size: 48px;
+}
+
+.orders-empty h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 20px;
+}
+
+.orders-empty p {
+  max-width: 450px;
+  margin: 8px auto 0;
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Mobile */
+
+@media (max-width: 900px) {
+  .orders-stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .orders-dashboard-page {
+    padding: 20px 14px;
+  }
+
+  .orders-page-header h1 {
+    font-size: 24px;
+  }
+
+  .orders-toolbar {
+    flex-direction: column;
+  }
+
+  .orders-search {
+    width: 100%;
+  }
+
+  .orders-status-filter {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .orders-stat-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.orders-page {
+  width: 100%;
+  min-width: 0;
+}
+
+.orders-customer {
+  color: #6b7280;
+  font-size: 12px;
+  font-family: monospace;
+}
+
+.orders-page .dashboard-table td strong {
+  color: #111827;
+  font-weight: 600;
+}
+
+.orders-page .dashboard-table td {
+  vertical-align: middle;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 700px) {
+  .orders-page .dashboard-card {
+    border-radius: 10px;
+  }
+
+  .orders-page .dashboard-table {
+    min-width: 850px;
+  }
+}
+

@@ -1,0 +1,348 @@
+/* =========================================================
+   SETTINGS PAGE
+========================================================= */
+
+.settings-page {
+  width: 100%;
+  min-width: 0;
+}
+
+/* =========================================================
+   SUCCESS MESSAGE
+========================================================= */
+
+.settings-success {
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  border: 1px solid #bbf7d0;
+  border-radius: 9px;
+  background: #f0fdf4;
+  color: #166534;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* =========================================================
+   SETTINGS CARD
+========================================================= */
+
+.settings-card {
+  margin-bottom: 20px;
+}
+
+.settings-card:last-child {
+  margin-bottom: 0;
+}
+
+/* =========================================================
+   CONTENT
+========================================================= */
+
+.settings-content {
+  padding: 20px;
+}
+
+/* =========================================================
+   PROFILE
+========================================================= */
+
+.settings-profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f0f1f3;
+}
+
+.settings-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 52px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.settings-profile > div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.settings-profile strong {
+  overflow: hidden;
+  color: #111827;
+  font-size: 14px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-profile span {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+/* =========================================================
+   INFORMATION GRID
+========================================================= */
+
+.settings-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  margin-top: 4px;
+}
+
+.settings-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 18px 20px 4px 0;
+}
+
+.settings-info-item span {
+  color: #9ca3af;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.settings-info-item strong {
+  overflow: hidden;
+  color: #111827;
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-user-id {
+  font-family: monospace;
+  font-size: 11px !important;
+  color: #6b7280 !important;
+}
+
+/* =========================================================
+   FORM FIELD
+========================================================= */
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.settings-field label {
+  color: #374151;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.settings-field input {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111827;
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.settings-field input::placeholder {
+  color: #9ca3af;
+}
+
+.settings-field input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+}
+
+.settings-field input:disabled {
+  background: #f9fafb;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.settings-field small {
+  color: #9ca3af;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   PASSWORD
+========================================================= */
+
+.settings-password-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.settings-password-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.settings-password-actions .dashboard-btn {
+  min-height: 42px;
+  padding: 0 18px;
+  border-radius: 9px;
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
+}
+
+.settings-password-actions .dashboard-btn:hover {
+  border-color: #1d4ed8;
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.18);
+}
+
+.settings-password-actions .dashboard-btn:active {
+  transform: translateY(0);
+}
+
+.settings-password-actions .dashboard-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* =========================================================
+   SECURITY
+========================================================= */
+
+.settings-security {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 20px 12px;
+}
+
+.settings-security-item {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f1f3;
+}
+
+.settings-security-item:last-child {
+  border-bottom: none;
+}
+
+.settings-security-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #f0fdf4;
+  color: #15803d;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.settings-security-item > div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.settings-security-item strong {
+  color: #111827;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.settings-security-item span {
+  color: #6b7280;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   RESPONSIVE - 700
+========================================================= */
+
+@media (max-width: 700px) {
+  .settings-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-info-item {
+    padding-right: 0;
+  }
+
+  .settings-password-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-password-actions {
+    justify-content: stretch;
+  }
+
+  .settings-password-actions .dashboard-btn {
+    width: 100%;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE - 480
+========================================================= */
+
+@media (max-width: 480px) {
+  .settings-content {
+    padding: 16px;
+  }
+
+  .settings-profile {
+    gap: 11px;
+  }
+
+  .settings-avatar {
+    flex-basis: 46px;
+    width: 46px;
+    height: 46px;
+    font-size: 17px;
+  }
+
+  .settings-security {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .settings-security-item {
+    align-items: flex-start;
+  }
+}

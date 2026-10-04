@@ -6,22 +6,51 @@ import "../styles/Home.css";
 
 function Home() {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [cardsVisible, setCardsVisible] = useState(4);
 
   useEffect(() => {
-    loadProducts();
+    loadHomeData();
   }, []);
 
-  async function loadProducts() {
+  /*
+    Responsive slider
+  */
+  useEffect(() => {
+    function updateCardsVisible() {
+      if (window.innerWidth <= 600) {
+        setCardsVisible(2);
+      } else if (window.innerWidth <= 900) {
+        setCardsVisible(3);
+      } else {
+        setCardsVisible(4);
+      }
+    }
+
+    updateCardsVisible();
+
+    window.addEventListener("resize", updateCardsVisible);
+
+    return () => {
+      window.removeEventListener("resize", updateCardsVisible);
+    };
+  }, []);
+
+  async function loadHomeData() {
     try {
       setLoading(true);
 
+      /*
+        PRODUCTS
+      */
       const { data: productData, error: productError } =
         await supabase
           .from("products")
           .select("*")
-          .order("id");
+          .eq("is_active", true)
+          .order("id", { ascending: false });
 
       if (productError) {
         console.error("Product error:", productError);
@@ -31,6 +60,9 @@ function Home() {
 
       const loadedProducts = productData || [];
 
+      /*
+        PRODUCT IMAGES
+      */
       const productIds = loadedProducts.map(
         (product) => product.id
       );
@@ -64,6 +96,9 @@ function Home() {
         }
       }
 
+      /*
+        ATTACH PRIMARY IMAGE
+      */
       const finalProducts = loadedProducts.map(
         (product) => {
           const productImages = imageData.filter(
@@ -94,187 +129,167 @@ function Home() {
 
       setProducts(finalProducts);
       setCurrentSlide(0);
+
+      /*
+        CATEGORIES
+      */
+      const { data: categoryData, error: categoryError } =
+        await supabase
+          .from("categories")
+          .select("*")
+          .eq("is_active", true)
+          .order("name");
+
+      if (categoryError) {
+        console.error(
+          "Category error:",
+          categoryError
+        );
+        setCategories([]);
+      } else {
+        setCategories(categoryData || []);
+      }
     } catch (error) {
       console.error("Home error:", error);
       setProducts([]);
+      setCategories([]);
     } finally {
       setLoading(false);
     }
   }
 
   /*
-    Slider
-    Desktop / Tablet = 3 products
-    Phone = 2 products
+    SLIDER
   */
+  const maxSlide = Math.max(
+    0,
+    products.length - cardsVisible
+  );
 
-  function getVisibleProducts() {
-    return window.innerWidth <= 600 ? 2 : 3;
-  }
+  const totalSlides = maxSlide + 1;
 
-  function getMaxSlide() {
-    const visible = getVisibleProducts();
+  useEffect(() => {
+    if (currentSlide > maxSlide) {
+      setCurrentSlide(maxSlide);
+    }
+  }, [cardsVisible, maxSlide, currentSlide]);
 
-    return Math.max(
-      0,
-      products.length - visible
+  function nextSlide() {
+    if (maxSlide <= 0) return;
+
+    setCurrentSlide((current) =>
+      current >= maxSlide ? 0 : current + 1
     );
   }
 
-  useEffect(() => {
-    if (products.length <= 3) {
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setCurrentSlide((current) => {
-        const visible =
-          window.innerWidth <= 600 ? 2 : 3;
-
-        const maxSlide = Math.max(
-          0,
-          products.length - visible
-        );
-
-        if (current >= maxSlide) {
-          return 0;
-        }
-
-        return current + 1;
-      });
-    }, 3500);
-
-    return () => clearInterval(timer);
-  }, [products.length]);
-
-  function nextSlide() {
-    const maxSlide = getMaxSlide();
-
-    if (maxSlide <= 0) return;
-
-    setCurrentSlide((current) => {
-      if (current >= maxSlide) {
-        return 0;
-      }
-
-      return current + 1;
-    });
-  }
-
   function previousSlide() {
-    const maxSlide = getMaxSlide();
-
     if (maxSlide <= 0) return;
 
-    setCurrentSlide((current) => {
-      if (current <= 0) {
-        return maxSlide;
-      }
-
-      return current - 1;
-    });
+    setCurrentSlide((current) =>
+      current <= 0 ? maxSlide : current - 1
+    );
   }
 
   function goToSlide(index) {
-    const maxSlide = getMaxSlide();
-
     setCurrentSlide(
       Math.min(index, maxSlide)
     );
   }
 
-  const visibleProducts =
-    typeof window !== "undefined" &&
-    window.innerWidth <= 600
-      ? 2
-      : 3;
-
-  const totalSlides = Math.max(
-    0,
-    products.length - visibleProducts + 1
-  );
-
   /*
-    Use the first product with an image
-    for the Hero showcase.
+    HOME DATA
   */
 
+  // First 3 products
+  const featuredProducts = products.slice(0, 3);
+
+  // Product used for spotlight
+  const spotlightProduct =
+    products[3] || products[0];
+
+  // New arrivals
+  const newArrivals = products.slice(0, 10);
+
+  // Hero product
   const heroProduct =
     products.find(
       (product) => product.display_image
     ) || products[0];
+
+  /*
+    CATEGORY LIMIT
+  */
+  const displayedCategories =
+    categories.slice(0, 6);
 
   return (
     <div className="home">
 
       <Navbar />
 
-      {/* =================================================
+      {/* =====================================================
           HERO
-      ================================================= */}
+      ===================================================== */}
 
-      <section className="hero">
+      <section className="home-hero">
 
-        <div className="hero-content">
+        <div className="home-hero-content">
 
-          <p className="hero-small">
+          <p className="home-hero-small">
             WELCOME TO OUR MARKETPLACE
           </p>
 
           <h1>
-            Find products
+            Find what
             <br />
-            you love.
+            you need.
           </h1>
 
-          <p className="hero-description">
-            Discover great products at simple
-            and affordable prices.
+          <p className="home-hero-description">
+            Discover quality products from different
+            categories, all in one simple marketplace.
           </p>
 
           <Link
             to="/products"
-            className="hero-button"
+            className="home-hero-button"
           >
-            Shop Now
+            Explore Products
+            <span>→</span>
           </Link>
 
         </div>
 
 
-        {/* =================================================
-            HERO PRODUCT SHOWCASE
-        ================================================= */}
+        {/* HERO PRODUCT */}
 
         {heroProduct && (
-          <div className="hero-showcase">
+          <div className="home-hero-showcase">
 
             <Link
               to={`/products/${heroProduct.id}`}
-              className="hero-product-card"
+              className="home-hero-product"
             >
 
-              <div className="hero-product-image-wrapper">
+              <div className="home-hero-image">
 
                 {heroProduct.display_image ? (
                   <img
                     src={heroProduct.display_image}
                     alt={heroProduct.display_alt}
-                    className="hero-product-image"
                   />
                 ) : (
-                  <div className="hero-no-image">
+                  <div className="home-no-image">
                     No image
                   </div>
                 )}
 
               </div>
 
-
-              <div className="hero-product-info">
+              <div className="home-hero-product-info">
 
                 <div>
-                  <p className="hero-product-category">
+                  <p>
                     {heroProduct.category ||
                       "Featured Product"}
                   </p>
@@ -284,23 +299,19 @@ function Home() {
                   </h2>
                 </div>
 
-                <div className="hero-product-price">
+                <strong>
                   $
                   {Number(
                     heroProduct.price || 0
                   ).toFixed(2)}
-                </div>
+                </strong>
 
               </div>
 
             </Link>
 
-
-            {/* Small decorative cards */}
-
-            <div className="hero-decoration hero-decoration-one" />
-
-            <div className="hero-decoration hero-decoration-two" />
+            <div className="home-decoration home-decoration-one" />
+            <div className="home-decoration home-decoration-two" />
 
           </div>
         )}
@@ -308,29 +319,85 @@ function Home() {
       </section>
 
 
-      {/* =================================================
+      {/* =====================================================
+          CATEGORIES
+      ===================================================== */}
+
+      {!loading &&
+        displayedCategories.length > 0 && (
+          <section className="home-categories">
+
+            <div className="home-section-heading">
+
+              <div>
+                <p className="home-section-label">
+                  BROWSE
+                </p>
+
+                <h2>
+                  Shop by Category
+                </h2>
+              </div>
+
+              <Link
+                to="/products"
+                className="home-view-all"
+              >
+                All Categories →
+              </Link>
+
+            </div>
+
+
+            <div className="home-category-list">
+
+              {displayedCategories.map(
+                (category) => (
+                  <Link
+                    key={category.id}
+                    to="/products"
+                    className="home-category-card"
+                  >
+
+                    <span>
+                      {category.name}
+                    </span>
+
+                    <span className="home-category-arrow">
+                      →
+                    </span>
+
+                  </Link>
+                )
+              )}
+
+            </div>
+
+          </section>
+        )}
+
+
+      {/* =====================================================
           FEATURED PRODUCTS
-      ================================================= */}
+      ===================================================== */}
 
-      <section className="featured">
+      <section className="home-featured">
 
-        <div className="section-header">
+        <div className="home-section-heading">
 
           <div>
-
-            <p className="section-small">
+            <p className="home-section-label">
               OUR COLLECTION
             </p>
 
             <h2>
               Featured Products
             </h2>
-
           </div>
 
           <Link
             to="/products"
-            className="view-all"
+            className="home-view-all"
           >
             View all →
           </Link>
@@ -339,167 +406,336 @@ function Home() {
 
 
         {loading && (
-          <div className="products-loading">
+          <div className="home-loading">
             Loading products...
           </div>
         )}
 
 
         {!loading &&
-          products.length === 0 && (
-            <div className="products-empty">
+          featuredProducts.length === 0 && (
+            <div className="home-empty">
               No products available.
             </div>
           )}
 
 
         {!loading &&
-          products.length > 0 && (
-            <>
+          featuredProducts.length > 0 && (
+            <div className="home-featured-grid">
 
-              <div className="home-slider">
-
-                {products.length > 3 && (
-                  <button
-                    className="home-slider-button left"
-                    onClick={previousSlide}
-                    type="button"
-                    aria-label="Previous products"
-                  >
-                    ‹
-                  </button>
-                )}
-
-
-                <div className="home-slider-viewport">
-
-                  <div
-                    className="home-slider-track"
-                    style={{
-                      "--current-slide":
-                        currentSlide,
-                    }}
+              {featuredProducts.map(
+                (product) => (
+                  <Link
+                    key={product.id}
+                    to={`/products/${product.id}`}
+                    className="home-product-card"
                   >
 
-                    {products.map(
-                      (product) => (
-                        <div
-                          className="home-slide"
-                          key={product.id}
+                    <div className="home-product-image">
+
+                      {product.display_image ? (
+                        <img
+                          src={product.display_image}
+                          alt={product.display_alt}
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="home-no-image">
+                          No image
+                        </div>
+                      )}
+
+                    </div>
+
+
+                    <div className="home-product-info">
+
+                      <div>
+
+                        <p className="home-product-category">
+                          {product.category ||
+                            "Product"}
+                        </p>
+
+                        <h3>
+                          {product.name}
+                        </h3>
+
+                      </div>
+
+                      <strong>
+                        $
+                        {Number(
+                          product.price || 0
+                        ).toFixed(2)}
+                      </strong>
+
+                    </div>
+
+                  </Link>
+                )
+              )}
+
+            </div>
+          )}
+
+      </section>
+
+
+      {/* =====================================================
+          PRODUCT SPOTLIGHT
+      ===================================================== */}
+
+      {!loading &&
+        spotlightProduct && (
+          <section className="home-spotlight">
+
+            <div className="home-spotlight-image">
+
+              {spotlightProduct.display_image ? (
+                <img
+                  src={
+                    spotlightProduct.display_image
+                  }
+                  alt={
+                    spotlightProduct.display_alt
+                  }
+                />
+              ) : (
+                <div className="home-no-image">
+                  No image
+                </div>
+              )}
+
+            </div>
+
+
+            <div className="home-spotlight-content">
+
+              <p className="home-spotlight-label">
+                NEW ARRIVAL
+              </p>
+
+              <h2>
+                {spotlightProduct.name}
+              </h2>
+
+              <p className="home-spotlight-description">
+                Discover this product and explore
+                more details, available options and
+                pricing.
+              </p>
+
+              <div className="home-spotlight-price">
+                $
+                {Number(
+                  spotlightProduct.price || 0
+                ).toFixed(2)}
+              </div>
+
+              <Link
+                to={`/products/${spotlightProduct.id}`}
+                className="home-dark-button"
+              >
+                View Product
+                <span>→</span>
+              </Link>
+
+            </div>
+
+          </section>
+        )}
+
+
+      {/* =====================================================
+          NEW ARRIVALS
+      ===================================================== */}
+
+      {!loading &&
+        newArrivals.length > 0 && (
+          <section className="home-arrivals">
+
+            <div className="home-section-heading">
+
+              <div>
+                <p className="home-section-label">
+                  JUST ADDED
+                </p>
+
+                <h2>
+                  New Arrivals
+                </h2>
+              </div>
+
+              <Link
+                to="/products"
+                className="home-view-all"
+              >
+                View all →
+              </Link>
+
+            </div>
+
+
+            <div className="home-slider">
+
+              {newArrivals.length > cardsVisible && (
+                <button
+                  className="home-slider-button left"
+                  onClick={previousSlide}
+                  type="button"
+                  aria-label="Previous products"
+                >
+                  ‹
+                </button>
+              )}
+
+
+              <div className="home-slider-viewport">
+
+                <div
+                  className="home-slider-track"
+                  style={{
+                    "--current-slide":
+                      currentSlide,
+                    "--cards-visible":
+                      cardsVisible,
+                  }}
+                >
+
+                  {newArrivals.map(
+                    (product) => (
+                      <div
+                        className="home-slide"
+                        key={product.id}
+                      >
+
+                        <Link
+                          to={`/products/${product.id}`}
+                          className="home-arrival-card"
                         >
 
-                          <div className="product-card">
+                          <div className="home-arrival-image">
 
-                            <Link
-                              to={`/products/${product.id}`}
-                              className="product-image-link"
-                            >
-
-                              {product.display_image ? (
-                                <img
-                                  src={
-                                    product.display_image
-                                  }
-                                  alt={
-                                    product.display_alt
-                                  }
-                                  className="product-image"
-                                />
-                              ) : (
-                                <div className="product-image no-image">
-                                  No image available
-                                </div>
-                              )}
-
-                            </Link>
-
-
-                            <div className="product-info">
-
-                              {product.category && (
-                                <p className="product-category">
-                                  {product.category}
-                                </p>
-                              )}
-
-                              <h3
-                                title={
-                                  product.name
+                            {product.display_image ? (
+                              <img
+                                src={
+                                  product.display_image
                                 }
-                              >
-                                {product.name}
-                              </h3>
-
-                              <p className="product-price">
-                                $
-                                {Number(
-                                  product.price || 0
-                                ).toFixed(2)}
-                              </p>
-
-                              <Link
-                                to={`/products/${product.id}`}
-                                className="product-button"
-                              >
-                                View Product
-                              </Link>
-
-                            </div>
+                                alt={
+                                  product.display_alt
+                                }
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div className="home-no-image">
+                                No image
+                              </div>
+                            )}
 
                           </div>
 
-                        </div>
-                      )
-                    )}
 
-                  </div>
+                          <div className="home-arrival-info">
 
-                </div>
+                            <p>
+                              {product.category ||
+                                "Product"}
+                            </p>
 
+                            <h3>
+                              {product.name}
+                            </h3>
 
-                {products.length > 3 && (
-                  <button
-                    className="home-slider-button right"
-                    onClick={nextSlide}
-                    type="button"
-                    aria-label="Next products"
-                  >
-                    ›
-                  </button>
-                )}
+                            <strong>
+                              $
+                              {Number(
+                                product.price || 0
+                              ).toFixed(2)}
+                            </strong>
 
-              </div>
+                          </div>
 
+                        </Link>
 
-              {totalSlides > 1 && (
-                <div className="home-slider-dots">
-
-                  {Array.from(
-                    { length: totalSlides },
-                    (_, index) => (
-                      <button
-                        key={index}
-                        type="button"
-                        className={
-                          currentSlide === index
-                            ? "active"
-                            : ""
-                        }
-                        onClick={() =>
-                          goToSlide(index)
-                        }
-                        aria-label={`Go to slide ${
-                          index + 1
-                        }`}
-                      />
+                      </div>
                     )
                   )}
 
                 </div>
+
+              </div>
+
+
+              {newArrivals.length > cardsVisible && (
+                <button
+                  className="home-slider-button right"
+                  onClick={nextSlide}
+                  type="button"
+                  aria-label="Next products"
+                >
+                  ›
+                </button>
               )}
 
-            </>
-          )}
+            </div>
+
+
+            {totalSlides > 1 && (
+              <div className="home-slider-dots">
+
+                {Array.from(
+                  { length: totalSlides },
+                  (_, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      className={
+                        currentSlide === index
+                          ? "active"
+                          : ""
+                      }
+                      onClick={() =>
+                        goToSlide(index)
+                      }
+                      aria-label={`Go to slide ${
+                        index + 1
+                      }`}
+                    />
+                  )
+                )}
+
+              </div>
+            )}
+
+          </section>
+        )}
+
+
+      {/* =====================================================
+          EXPLORE CTA
+      ===================================================== */}
+
+      <section className="home-explore">
+
+        <p>
+          EVERYTHING IN ONE PLACE
+        </p>
+
+        <h2>
+          Ready to find something
+          <br />
+          you like?
+        </h2>
+
+        <Link
+          to="/products"
+          className="home-explore-button"
+        >
+          Explore Products
+          <span>→</span>
+        </Link>
 
       </section>
 

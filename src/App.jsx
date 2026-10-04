@@ -1,156 +1,104 @@
-
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+import { CartProvider } from "./context/CartContext";
+
+// Public pages
 import Home from "./pages/Home";
 import Products from "./pages/Products";
 import ProductDetails from "./pages/ProductDetails";
 
+// Auth pages
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 
-import Cart from "./pages/Cart";
+// Shopping
 import Checkout from "./pages/Checkout";
 import Payment from "./pages/Payment";
-import Orders from "./pages/Orders";
-import Profile from "./pages/Profile";
-import OrderSuccess from "./pages/OrderSuccess";
 
-import ProtectedRoute from "./components/ProtectedRoute";
-import SellerDashboard from "./pages/SellerDashboard";
-import SellerProducts from "./pages/SellerProducts";
-import AddProduct from "./pages/seller/AddProduct";
+// Dashboard
+import DashboardLayout from "./components/dashboard/DashboardLayout";
 
-import { CartProvider } from "./context/CartContext";
-
+import Dashboard from "./pages/dashboard/Dashboard";
+import SellerProducts from "./pages/dashboard/Products";
+import AddProduct from "./pages/dashboard/AddProduct";
+import Orders from "./pages/dashboard/Orders";
+import Inventory from "./pages/dashboard/Inventory";
+import Customers from "./pages/dashboard/Customers";
+import Analytics from "./pages/dashboard/Analytics";
+import Settings from "./pages/dashboard/Settings";
+import EditProduct from "./pages/dashboard/EditProduct";
+import Cart from "./pages/Cart";
 function App() {
   return (
-    <BrowserRouter>
-      <CartProvider>
+    <CartProvider>
+      <BrowserRouter>
         <Routes>
-
-          {/* Public pages */}
-          <Route
-            path="/"
-            element={<Home />}
-          />
-
-          <Route
-            path="/products"
-            element={<Products />}
-          />
-
+          {/* PUBLIC */}
+          <Route path="/" element={<Home />} />
+          <Route path="/products" element={<Products />} />
           <Route
             path="/products/:id"
             element={<ProductDetails />}
           />
 
-          <Route
-            path="/login"
-            element={<Login />}
-          />
+          {/* AUTH */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
 
-          <Route
-            path="/signup"
-            element={<Signup />}
-          />
+          {/* PAYMENT */}
+          <Route path="/payment" element={<Payment />} />
 
-          {/* Cart */}
-          <Route
-            path="/cart"
-            element={
-              <ProtectedRoute>
-                <Cart />
-              </ProtectedRoute>
-            }
-          />
+          {/* SHOPPING */}
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/cart" element={<Cart />} />
+          {/* DASHBOARD */}
+          <Route path="/dashboard" element={<DashboardLayout />}>
+            <Route index element={<Dashboard />} />
 
-          {/* Checkout */}
-          <Route
-            path="/checkout"
-            element={
-              <ProtectedRoute>
-                <Checkout />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Payment */}
-          <Route
-            path="/payment"
-            element={
-              <ProtectedRoute>
-                <Payment />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Orders */}
-          <Route
-            path="/orders"
-            element={
-              <ProtectedRoute>
-                <Orders />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Profile */}
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Order success */}
-          <Route
-            path="/order-success"
-            element={
-              <ProtectedRoute>
-                <OrderSuccess />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/seller"
-            element={<SellerDashboard />}
-          />
-          <Route
-            path="/seller/products"
-            element={<SellerProducts />}
+            <Route
+              path="products"
+              element={<SellerProducts />}
             />
 
-          <Route
-            path="/seller/products/new"
-            element={<AddProduct />}
-          />
-          {/* 404 */}
-          <Route
-            path="*"
-            element={
-              <div
-                style={{
-                  minHeight: "100vh",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexDirection: "column",
-                  gap: "12px",
-                }}
-              >
-                <h1>404</h1>
-                <p>Page not found.</p>
-              </div>
-            }
-          />
+            <Route
+              path="products/new"
+              element={<AddProduct />}
+            />
 
+            <Route
+              path="products/:id/edit"
+             element={<EditProduct />}
+            />
+
+            <Route
+              path="orders"
+              element={<Orders />}
+            />
+
+            <Route
+              path="inventory"
+              element={<Inventory />}
+            />
+
+            <Route
+              path="customers"
+              element={<Customers />}
+            />
+
+            <Route
+              path="analytics"
+              element={<Analytics />}
+            />
+
+            <Route
+              path="settings"
+              element={<Settings />}
+            />
+          </Route>
         </Routes>
-      </CartProvider>
-    </BrowserRouter>
+      </BrowserRouter>
+    </CartProvider>
   );
 }
 
 export default App;
-

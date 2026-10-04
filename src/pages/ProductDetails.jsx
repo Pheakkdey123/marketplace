@@ -315,65 +315,54 @@ function ProductDetails() {
   // BUY NOW
   // =========================================
 
-  async function handleBuyNow() {
-    if (!product) {
-      return;
-    }
+// =========================================
+// BUY NOW
+// =========================================
 
-    if (!selectedVariant) {
-      showMessage(
-        "Please select a variant."
-      );
-      return;
-    }
-
-    if (
-      selectedVariant.variant_stock <= 0
-    ) {
-      showMessage(
-        "This product is out of stock."
-      );
-      return;
-    }
-
-    const result =
-      await addToCart({
-        id: product.id,
-        name: product.name,
-        description: product.description,
-
-        image_url:
-          selectedImage ||
-          product.image_url ||
-          "",
-
-        variant_id:
-          selectedVariant.id,
-
-        variant_name:
-          selectedVariant.name,
-
-        sku:
-          selectedVariant.sku,
-
-        variant_price:
-          selectedVariant.variant_price,
-
-        variant_stock:
-          selectedVariant.variant_stock,
-      });
-
-    if (!result?.success) {
-      showMessage(
-        result?.error ||
-          "Unable to buy this product."
-      );
-
-      return;
-    }
-
-    navigate("/checkout");
+function handleBuyNow() {
+  if (!product) {
+    return;
   }
+
+  if (!selectedVariant) {
+    showMessage("Please select a variant.");
+    return;
+  }
+
+  if (selectedVariant.variant_stock <= 0) {
+    showMessage("This product is out of stock.");
+    return;
+  }
+
+  const buyNowItem = {
+    id: product.id,
+    name: product.name,
+    description: product.description,
+
+    image_url:
+      selectedImage ||
+      product.image_url ||
+      "",
+
+    variant_id: selectedVariant.id,
+
+    variant_name: selectedVariant.name,
+
+    sku: selectedVariant.sku,
+
+    variant_price: selectedVariant.variant_price,
+
+    variant_stock: selectedVariant.variant_stock,
+
+    quantity: 1,
+  };
+
+  navigate("/checkout", {
+    state: {
+      buyNowItem,
+    },
+  });
+}
 
   // =========================================
   // LOADING

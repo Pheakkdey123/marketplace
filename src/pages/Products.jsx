@@ -1,5 +1,4 @@
-
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../service/supabase";
 import Navbar from "../components/Navbar";
@@ -7,139 +6,284 @@ import "../styles/Products.css";
 
 function Products() {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+
+  const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] =
+    useState("all");
 
   useEffect(() => {
     loadProducts();
   }, []);
 
   async function loadProducts() {
-    setLoading(true);
-    setError("");
+    try {
+      setLoading(true);
+      setError("");
 
-    const { data, error } = await supabase
-      .from("products")
-      .select(`
-        id,
-        name,
-        description,
-        price,
-        image_url,
-        is_active,
-        created_at,
-        category_id,
-        categories (
-          id,
-          name
-        ),
-        product_images (
-          id,
-          image_url,
-          alt_text,
-          sort_order,
-          is_primary
-        )
-      `)
-      .eq("is_active", true)
-      .order("created_at", { ascending: false });
+      const [
+        { data: productData, error: productError },
+        { data: categoryData, error: categoryError },
+      ] = await Promise.all([
+        supabase
+          .from("products")
+          .select(`
+            id,
+            name,
+            description,
+            price,
+            image_url,
+            is_active,
+            created_at,
+            category_id,
+            categories (
+              id,
+              name
+            ),
+            product_images (
+              id,
+              image_url,
+              alt_text,
+              sort_order,
+              is_primary
+            )
+          `)
+          .eq("is_active", true)
+          .order("created_at", {
+            ascending: false,
+          }),
 
-    if (error) {
-      console.error("Load products error:", error);
-      setError(error.message);
+        supabase
+          .from("categories")
+          .select(`
+            id,
+            name,
+            description,
+            image_url,
+            is_active
+          `)
+          .eq("is_active", true)
+          .order("name", {
+            ascending: true,
+          }),
+      ]);
+
+      if (productError) {
+        throw productError;
+      }
+
+      if (categoryError) {
+        throw categoryError;
+      }
+
+      setProducts(productData || []);
+      setCategories(categoryData || []);
+    } catch (err) {
+      console.error("Load products error:", err);
+
+      setError(
+        err.message || "Failed to load products."
+      );
+    } finally {
       setLoading(false);
-      return;
     }
-
-    setProducts(data || []);
-    setCurrentPage(1);
-    setLoading(false);
   }
+
+  /*
+    GET BEST PRODUCT IMAGE
+  */
 
   function getProductImage(product) {
     if (
       product.product_images &&
       product.product_images.length > 0
     ) {
-      const primaryImage = product.product_images.find(
-        (image) => image.is_primary
-      );
+      const primaryImage =
+        product.product_images.find(
+          (image) => image.is_primary === true
+        );
 
-      if (primaryImage) {
+      if (primaryImage?.image_url) {
         return primaryImage.image_url;
       }
 
-      const sortedImages = [...product.product_images].sort(
-        (a, b) => a.sort_order - b.sort_order
+      const sortedImages = [
+        ...product.product_images,
+      ].sort(
+        (a, b) =>
+          (a.sort_order || 0) -
+          (b.sort_order || 0)
       );
 
-      return sortedImages[0]?.image_url || product.image_url;
+      return (
+        sortedImages[0]?.image_url ||
+        product.image_url ||
+        null
+      );
     }
 
-    return product.image_url;
+    return product.image_url || null;
   }
 
   /*
-   * 4 products per page on phone.
-   * 8 products per page on larger screens.
-   */
-  const productsPerPage =
-    typeof window !== "undefined" && window.innerWidth <= 600
-      ? 4
-      : 8;
+    CATEGORIES THAT ACTUALLY HAVE PRODUCTS
+  */
 
-  const totalPages = Math.ceil(
-    products.length / productsPerPage
+  const visibleCategories = categories.filter(
+    (category) =>
+      products.some(
+        (product) =>
+          String(product.category_id) ===
+          String(category.id)
+      )
   );
 
-  const startIndex =
-    (currentPage - 1) * productsPerPage;
+  /*
+    FILTER
+  */
 
-  const currentProducts = products.slice(
-    startIndex,
-    startIndex + productsPerPage
-  );
+  const filteredProducts = useMemo(() => {
+    const searchValue = search
+      .trim()
+      .toLowerCase();
 
-  function goToPage(page) {
-    setCurrentPage(page);
+    return products.filter((product) => {
+      const matchesCategory =
+        selectedCategory === "all" ||
+        String(product.category_id) ===
+          String(selectedCategory);
 
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
+      if (!matchesCategory) {
+        return false;
+      }
+
+      if (!searchValue) {
+        return true;
+      }
+
+      const name =
+        product.name?.toLowerCase() || "";
+
+      const description =
+        product.description?.toLowerCase() || "";
+
+      const category =
+        product.categories?.name?.toLowerCase() ||
+        "";
+
+      return (
+        name.includes(searchValue) ||
+        description.includes(searchValue) ||
+        category.includes(searchValue)
+      );
     });
+  }, [
+    products,
+    search,
+    selectedCategory,
+  ]);
+
+  /*
+    CATEGORY COUNT
+  */
+
+  function getCategoryCount(categoryId) {
+    return products.filter(
+      (product) =>
+        String(product.category_id) ===
+        String(categoryId)
+    ).length;
   }
+
+  /*
+    CATEGORY NAME
+  */
+
+  function getSelectedCategoryName() {
+    if (selectedCategory === "all") {
+      return "All Products";
+    }
+
+    const category = categories.find(
+      (item) =>
+        String(item.id) ===
+        String(selectedCategory)
+    );
+
+    return category?.name || "Products";
+  }
+
+  /*
+    RESET
+  */
+
+  function resetFilters() {
+    setSearch("");
+    setSelectedCategory("all");
+  }
+
+  /*
+    LOADING
+  */
 
   if (loading) {
     return (
       <>
         <Navbar />
 
-        <div className="products-page">
-          <div className="products-loading">
-            <div className="loading-spinner"></div>
-            <p>Loading products...</p>
+        <main className="products-page">
+
+          <div className="products-loading-page">
+            <div className="loading-spinner" />
+
+            <p>
+              Loading products...
+            </p>
           </div>
-        </div>
+
+        </main>
       </>
     );
   }
+
+  /*
+    ERROR
+  */
 
   if (error) {
     return (
       <>
         <Navbar />
 
-        <div className="products-page">
-          <div className="products-error">
-            <h2>Unable to load products.</h2>
-            <p>{error}</p>
+        <main className="products-page">
 
-            <button onClick={loadProducts}>
+          <div className="products-error-page">
+
+            <div className="products-error-icon">
+              !
+            </div>
+
+            <h2>
+              Unable to load products
+            </h2>
+
+            <p>
+              {error}
+            </p>
+
+            <button
+              type="button"
+              onClick={loadProducts}
+            >
               Try Again
             </button>
+
           </div>
-        </div>
+
+        </main>
       </>
     );
   }
@@ -148,161 +292,299 @@ function Products() {
     <>
       <Navbar />
 
-      <div className="products-page">
-        <div className="products-container">
+      <main className="products-page">
 
-          {/* Header */}
-          <div className="products-header">
+        {/* =================================================
+            HEADER
+        ================================================= */}
+
+        <header className="products-header">
+
+          <div className="products-header-content">
+
+            <p className="products-eyebrow">
+              MARKETPLACE
+            </p>
+
+            <h1>
+              Discover Products
+            </h1>
+
+            <p className="products-subtitle">
+              Find something you like from our
+              collection.
+            </p>
+
+          </div>
+
+
+          {/* SEARCH */}
+
+          <div className="products-search">
+
+            <span className="products-search-icon">
+              ⌕
+            </span>
+
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={search}
+              onChange={(e) =>
+                setSearch(e.target.value)
+              }
+            />
+
+            {search && (
+              <button
+                type="button"
+                className="products-search-clear"
+                onClick={() => setSearch("")}
+                aria-label="Clear search"
+              >
+                ×
+              </button>
+            )}
+
+          </div>
+
+        </header>
+
+
+        {/* =================================================
+            CATEGORY BAR
+        ================================================= */}
+
+        <nav className="products-category-bar">
+
+          <button
+            type="button"
+            className={
+              selectedCategory === "all"
+                ? "products-category active"
+                : "products-category"
+            }
+            onClick={() =>
+              setSelectedCategory("all")
+            }
+          >
+            <span>
+              All
+            </span>
+
+            <small>
+              {products.length}
+            </small>
+          </button>
+
+
+          {visibleCategories.map(
+            (category) => (
+              <button
+                type="button"
+                key={category.id}
+                className={
+                  String(
+                    selectedCategory
+                  ) === String(category.id)
+                    ? "products-category active"
+                    : "products-category"
+                }
+                onClick={() =>
+                  setSelectedCategory(
+                    String(category.id)
+                  )
+                }
+              >
+                <span>
+                  {category.name}
+                </span>
+
+                <small>
+                  {getCategoryCount(
+                    category.id
+                  )}
+                </small>
+              </button>
+            )
+          )}
+
+        </nav>
+
+
+        {/* =================================================
+            PRODUCT AREA
+        ================================================= */}
+
+        <section className="products-content">
+
+          {/* TOP */}
+
+          <div className="products-results-header">
+
             <div>
-              <h1>Products</h1>
-              <p>
-                Discover products from our marketplace.
+
+              <p className="products-results-label">
+                COLLECTION
               </p>
+
+              <h2>
+                {getSelectedCategoryName()}
+              </h2>
+
             </div>
 
-            <span className="product-count">
-              {products.length}{" "}
-              {products.length === 1
+            <span className="products-results-count">
+              {filteredProducts.length}{" "}
+              {filteredProducts.length === 1
                 ? "product"
                 : "products"}
             </span>
+
           </div>
 
-          {/* Empty */}
-          {products.length === 0 ? (
+
+          {/* =================================================
+              EMPTY
+          ================================================= */}
+
+          {filteredProducts.length === 0 ? (
+
             <div className="products-empty">
-              <h2>No products available</h2>
-              <p>
-                There are currently no products available.
-              </p>
-            </div>
-          ) : (
-            <>
-              {/* Product Grid */}
-              <div className="products-grid">
-                {currentProducts.map((product) => {
-                  const image = getProductImage(product);
 
-                  return (
-                    <Link
-                      key={product.id}
-                      to={`/products/${product.id}`}
-                      className="product-card"
-                    >
-                      {/* Image */}
-                      <div className="product-image-container">
-                        {image ? (
-                          <img
-                            src={image}
-                            alt={
-                              product.product_images?.find(
-                                (img) =>
-                                  img.is_primary
-                              )?.alt_text ||
-                              product.name
-                            }
-                            className="product-image"
-                          />
-                        ) : (
-                          <div className="product-image-placeholder">
-                            No Image
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Information */}
-                      <div className="product-info">
-
-                        <div className="product-category">
-                          {product.categories?.name ||
-                            "Uncategorized"}
-                        </div>
-
-                        <h2>{product.name}</h2>
-
-                        {product.description && (
-                          <p className="product-description">
-                            {product.description}
-                          </p>
-                        )}
-
-                        <div className="product-bottom">
-                          <span className="product-price">
-                            $
-                            {Number(
-                              product.price
-                            ).toFixed(2)}
-                          </span>
-
-                          <span className="view-product">
-                            View →
-                          </span>
-                        </div>
-
-                      </div>
-                    </Link>
-                  );
-                })}
+              <div className="products-empty-icon">
+                ⌕
               </div>
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="products-pagination">
+              <h2>
+                No products found
+              </h2>
 
-                  <button
-                    type="button"
-                    className="pagination-button"
-                    disabled={currentPage === 1}
-                    onClick={() =>
-                      goToPage(currentPage - 1)
+              <p>
+                We couldn't find anything matching
+                your search.
+              </p>
+
+              <button
+                type="button"
+                onClick={resetFilters}
+              >
+                Show All Products
+              </button>
+
+            </div>
+
+          ) : (
+
+            /* =================================================
+               GRID
+            ================================================= */
+
+            <div className="products-grid">
+
+              {filteredProducts.map(
+                (product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    getProductImage={
+                      getProductImage
                     }
-                  >
-                    ←
-                  </button>
-
-                  {Array.from(
-                    { length: totalPages },
-                    (_, index) => index + 1
-                  ).map((page) => (
-                    <button
-                      key={page}
-                      type="button"
-                      className={`pagination-number ${
-                        currentPage === page
-                          ? "active"
-                          : ""
-                      }`}
-                      onClick={() =>
-                        goToPage(page)
-                      }
-                    >
-                      {page}
-                    </button>
-                  ))}
-
-                  <button
-                    type="button"
-                    className="pagination-button"
-                    disabled={
-                      currentPage === totalPages
-                    }
-                    onClick={() =>
-                      goToPage(currentPage + 1)
-                    }
-                  >
-                    →
-                  </button>
-
-                </div>
+                  />
+                )
               )}
-            </>
+
+            </div>
+
           )}
 
-        </div>
-      </div>
+        </section>
+
+      </main>
     </>
   );
 }
 
-export default Products;
 
+/* =========================================================
+   PRODUCT CARD
+========================================================= */
+
+function ProductCard({
+  product,
+  getProductImage,
+}) {
+  const image =
+    getProductImage(product);
+
+  const primaryImage =
+    product.product_images?.find(
+      (img) => img.is_primary === true
+    );
+
+  return (
+    <Link
+      to={`/products/${product.id}`}
+      className="products-card"
+    >
+
+      {/* IMAGE */}
+
+      <div className="products-card-image">
+
+        {image ? (
+          <img
+            src={image}
+            alt={
+              primaryImage?.alt_text ||
+              product.name ||
+              "Product"
+            }
+            loading="lazy"
+          />
+        ) : (
+          <div className="products-image-placeholder">
+            No Image
+          </div>
+        )}
+
+      </div>
+
+
+      {/* INFO */}
+
+      <div className="products-card-info">
+
+        <p className="products-card-category">
+          {product.categories?.name ||
+            "Uncategorized"}
+        </p>
+
+        <h3
+          title={product.name}
+        >
+          {product.name}
+        </h3>
+
+        <div className="products-card-bottom">
+
+          <strong>
+            $
+            {Number(
+              product.price || 0
+            ).toFixed(2)}
+          </strong>
+
+          <span>
+            View →
+          </span>
+
+        </div>
+
+      </div>
+
+    </Link>
+  );
+}
+
+export default Products;

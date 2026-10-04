@@ -1,110 +1,119 @@
-
-/* ========================================
-   PAYMENT
-======================================== */
-
 .payment-page {
-  width: 100%;
-  min-height: calc(100vh - 70px);
-
-  display: flex;
-  justify-content: center;
-
-  padding: 40px 20px;
+  min-height: 100vh;
+  background: #f7f7f7;
+  padding: 60px 20px;
+  box-sizing: border-box;
 }
 
 .payment-card {
   width: 100%;
   max-width: 520px;
-
-  padding: 30px;
-
+  margin: 0 auto;
   background: #ffffff;
-  border: 1px solid #eeeeee;
-  border-radius: 22px;
-
+  border: 1px solid #e5e5e5;
+  border-radius: 16px;
+  padding: 40px;
+  box-sizing: border-box;
   text-align: center;
-
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
 }
 
-.payment-card h1 {
-  margin-bottom: 8px;
-  font-size: 28px;
-  color: #111827;
+.payment-header h1 {
+  margin: 0 0 10px;
+  color: #111111;
+  font-size: 30px;
+}
+
+.payment-header p {
+  margin: 0;
+  color: #666666;
 }
 
 .payment-order {
-  margin-bottom: 25px;
-  color: #6b7280;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+  padding: 16px;
+  background: #f7f7f7;
+  border-radius: 10px;
 }
 
-/* ========================================
-   QR
-======================================== */
+.payment-order span {
+  color: #666666;
+}
+
+.payment-order strong {
+  color: #111111;
+}
 
 .payment-qr {
-  width: 280px;
-  max-width: 100%;
-
-  margin: 20px auto;
-
-  padding: 12px;
-
-  border: 1px solid #eeeeee;
-  border-radius: 16px;
-
-  background: #ffffff;
+  margin: 30px auto;
+  display: flex;
+  justify-content: center;
 }
 
 .payment-qr img {
-  width: 100%;
+  display: block;
+  width: 300px;
+  max-width: 100%;
   height: auto;
+  border: 1px solid #eeeeee;
+  border-radius: 12px;
 }
 
-/* ========================================
-   INFO
-======================================== */
+.payment-no-qr {
+  margin: 30px 0;
+  padding: 20px;
+  background: #f7f7f7;
+  border-radius: 10px;
+  color: #555555;
+}
 
 .payment-transaction {
-  margin-top: 15px;
-  padding: 12px;
-
-  border-radius: 10px;
-  background: #f7f7f8;
-
-  color: #4b5563;
-  font-size: 13px;
-
-  word-break: break-all;
+  margin-top: 20px;
+  padding: 16px;
+  border-top: 1px solid #eeeeee;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.payment-status {
-  margin-top: 18px;
-  color: #6b7280;
+.payment-transaction span {
+  color: #777777;
   font-size: 14px;
 }
 
-/* ========================================
-   MOBILE
-======================================== */
-
-@media (max-width: 480px) {
-  .payment-page {
-    padding: 20px 14px;
-  }
-
-  .payment-card {
-    padding: 22px 16px;
-    border-radius: 16px;
-  }
-
-  .payment-card h1 {
-    font-size: 24px;
-  }
-
-  .payment-qr {
-    width: 250px;
-  }
+.payment-transaction strong {
+  color: #111111;
+  word-break: break-all;
 }
 
+.payment-error {
+  margin: 25px 0;
+  padding: 15px;
+  background: #f5f5f5;
+  border: 1px solid #dddddd;
+  border-radius: 8px;
+  color: #111111;
+}
+
+.payment-loading {
+  padding: 40px 0;
+  color: #555555;
+}
+
+.payment-back-button {
+  width: 100%;
+  margin-top: 25px;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #111111;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.payment-back-button:hover {
+  background: #333333;
+}

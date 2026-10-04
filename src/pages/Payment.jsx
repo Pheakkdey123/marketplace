@@ -1,333 +1,289 @@
-
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "../service/supabase";
 import "../styles/Payment.css";
 
 function Payment() {
+  const [searchParams] =
+    useSearchParams();
+
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
 
-  const orderId = searchParams.get("order_id");
+  const orderId =
+    searchParams.get("order_id");
 
-  const [order, setOrder] = useState(null);
-  const [qrImage, setQrImage] = useState("");
-  const [tranId, setTranId] = useState("");
+  const [payment, setPayment] =
+    useState(null);
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [loading, setLoading] =
+    useState(true);
 
-  // --------------------------------------------------
-  // Load order
-  // --------------------------------------------------
+  const [error, setError] =
+    useState("");
 
   useEffect(() => {
-    if (!orderId) {
-      setError("Order ID is missing.");
-      setLoading(false);
-      return;
-    }
-
     async function loadPayment() {
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+        setLoading(true);
+        setError("");
 
-        if (!user) {
-          navigate(
-            `/login?redirect=/payment?order_id=${orderId}`,
-            { replace: true }
+        if (!orderId) {
+          setError(
+            "Order ID is missing."
           );
           return;
         }
 
-        const { data, error: orderError } = await supabase
-          .from("orders")
-          .select(`
-            id,
-            total,
-            status,
-            payment_method,
-            payment_reference,
-            paid_at
-          `)
-          .eq("id", orderId)
-          .eq("user_id", user.id)
-          .single();
+        // =====================================
+        // GET SAVED PAYWAY INFORMATION
+        // =====================================
 
-        if (orderError) {
-          console.error("Order loading error:", orderError);
-
-          setError("Unable to load order.");
-          setLoading(false);
-          return;
-        }
-
-        setOrder(data);
-
-        // Already paid
-        if (data.status === "paid") {
-          sessionStorage.removeItem(`payway_${orderId}`);
-
-          navigate(
-            `/order-success?order_id=${orderId}`,
-            { replace: true }
+        const savedPayment =
+          sessionStorage.getItem(
+            `payway_${orderId}`
           );
 
-          return;
-        }
-
-        // Load PayWay information
-        const storedPayment = sessionStorage.getItem(
-          `payway_${orderId}`
+        console.log(
+          "Saved payment:",
+          savedPayment
         );
 
-        if (storedPayment) {
-          try {
-            const payment = JSON.parse(storedPayment);
-
-            setQrImage(payment.qrImage || "");
-            setTranId(payment.tranId || "");
-          } catch (parseError) {
-            console.error(
-              "Unable to read PayWay payment:",
-              parseError
-            );
-          }
+        if (
+          !savedPayment
+        ) {
+          setError(
+            "Payment information was not found."
+          );
+          return;
         }
 
-        setLoading(false);
+        let paymentData;
+
+        try {
+          paymentData =
+            JSON.parse(
+              savedPayment
+            );
+        } catch (parseError) {
+          console.error(
+            "Payment JSON error:",
+            parseError
+          );
+
+          setError(
+            "Invalid payment information."
+          );
+
+          return;
+        }
+
+        console.log(
+          "Payment data:",
+          paymentData
+        );
+
+        setPayment(
+          paymentData
+        );
+
       } catch (err) {
-        console.error("Payment loading error:", err);
+        console.error(
+          "Payment page error:",
+          err
+        );
 
         setError(
           err instanceof Error
             ? err.message
             : "Unable to load payment."
         );
-
+      } finally {
         setLoading(false);
       }
     }
 
     loadPayment();
-  }, [orderId, navigate]);
+  }, [orderId]);
 
-  // --------------------------------------------------
-  // Check payment status
-  // --------------------------------------------------
-
-  useEffect(() => {
-    if (!orderId) {
-      return;
-    }
-
-    let cancelled = false;
-
-    async function checkPaymentStatus() {
-      const { data, error: statusError } = await supabase
-        .from("orders")
-        .select(`
-          id,
-          total,
-          status,
-          payment_method,
-          payment_reference,
-          paid_at
-        `)
-        .eq("id", orderId)
-        .single();
-
-      if (cancelled) {
-        return;
-      }
-
-      if (statusError) {
-        console.error(
-          "Payment status check error:",
-          statusError
-        );
-        return;
-      }
-
-      setOrder(data);
-
-      console.log(
-        "Payment status:",
-        data.status
-      );
-
-      if (data.status === "paid") {
-        sessionStorage.removeItem(
-          `payway_${orderId}`
-        );
-
-        navigate(
-          `/order-success?order_id=${orderId}`,
-          { replace: true }
-        );
-      }
-    }
-
-    // Check immediately
-    checkPaymentStatus();
-
-    // Then check every 5 seconds
-    const interval = setInterval(
-      checkPaymentStatus,
-      5000
-    );
-
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [orderId, navigate]);
-
-  // --------------------------------------------------
-  // Loading
-  // --------------------------------------------------
+  // =========================================
+  // LOADING
+  // =========================================
 
   if (loading) {
     return (
       <div className="payment-page">
         <div className="payment-card">
-          <h2>Loading payment...</h2>
+
+          <div className="payment-loading">
+            Loading payment...
+          </div>
+
         </div>
       </div>
     );
   }
 
-  // --------------------------------------------------
-  // Error
-  // --------------------------------------------------
+  // =========================================
+  // ERROR
+  // =========================================
 
   if (error) {
     return (
       <div className="payment-page">
         <div className="payment-card">
-          <h2>Payment Error</h2>
 
-          <p>{error}</p>
+          <h1>
+            Payment Error
+          </h1>
+
+          <div className="payment-error">
+            {error}
+          </div>
 
           <button
-            onClick={() => navigate("/checkout")}
+            className="payment-back-button"
+            onClick={() =>
+              navigate("/products")
+            }
           >
-            Back to Checkout
+            Continue Shopping
           </button>
+
         </div>
       </div>
     );
   }
 
-  // --------------------------------------------------
-  // Payment page
-  // --------------------------------------------------
+  // =========================================
+  // NO PAYMENT
+  // =========================================
 
-  if (!order) {
-    return null;
+  if (!payment) {
+    return (
+      <div className="payment-page">
+        <div className="payment-card">
+
+          <h1>
+            Payment Not Found
+          </h1>
+
+          <button
+            className="payment-back-button"
+            onClick={() =>
+              navigate("/products")
+            }
+          >
+            Continue Shopping
+          </button>
+
+        </div>
+      </div>
+    );
   }
+
+  // =========================================
+  // QR CODE
+  // =========================================
+
+  const qrImage =
+    payment.qrImage || "";
 
   return (
     <div className="payment-page">
+
       <div className="payment-card">
 
-        <h1>Complete Your Payment</h1>
+        <div className="payment-header">
 
-        <p className="payment-order">
-          Order #{order.id}
-        </p>
+          <h1>
+            Complete Payment
+          </h1>
 
-        <div className="payment-total">
-          ${Number(order.total).toFixed(2)}
+          <p>
+            Scan the QR code to pay
+          </p>
+
         </div>
 
-        {tranId && (
-          <p className="payment-reference">
-            Transaction: {tranId}
-          </p>
-        )}
+        {/* ===================================
+            ORDER
+        =================================== */}
 
-        {/* QR CODE */}
+        <div className="payment-order">
+
+          <span>
+            Order
+          </span>
+
+          <strong>
+            #{orderId}
+          </strong>
+
+        </div>
+
+        {/* ===================================
+            QR CODE
+        =================================== */}
 
         {qrImage ? (
-          <div className="payment-qr-container">
-
-            <p>
-              Scan this QR code with{" "}
-              <strong>ABA Mobile</strong>{" "}
-              to pay.
-            </p>
+          <div className="payment-qr">
 
             <img
               src={qrImage}
-              alt="ABA PayWay QR Code"
-              className="payment-qr"
+              alt="PayWay QR Code"
             />
-
-            <p className="payment-instruction">
-              After completing the payment,
-              please wait while we verify your
-              transaction.
-            </p>
 
           </div>
         ) : (
-          <div className="payment-waiting">
-            <p>
-              PayWay QR code is not available.
-            </p>
-
-            <small>
-              Please return to checkout and try
-              again.
-            </small>
-          </div>
-        )}
-
-        {/* PAYMENT STATUS */}
-
-        {order.status === "pending" && (
-          <div className="payment-status">
-
-            <div className="payment-spinner"></div>
+          <div className="payment-no-qr">
 
             <p>
-              Waiting for payment confirmation...
+              QR code was not returned by PayWay.
             </p>
 
-            <small>
-              We automatically check your payment
-              status every 5 seconds.
-            </small>
+            <p>
+              Please check the browser console
+              for the PayWay response.
+            </p>
 
           </div>
         )}
 
-        {order.status === "paid" && (
-          <div className="payment-status">
-            <p>
-              Payment confirmed. Redirecting...
-            </p>
+        {/* ===================================
+            TRANSACTION ID
+        =================================== */}
+
+        {payment.tranId && (
+          <div className="payment-transaction">
+
+            <span>
+              Transaction ID
+            </span>
+
+            <strong>
+              {payment.tranId}
+            </strong>
+
           </div>
         )}
 
-        {/* BACK BUTTON */}
+        {/* ===================================
+            ACTIONS
+        =================================== */}
 
-        {order.status === "pending" && (
-          <button
-            className="payment-cancel"
-            onClick={() => navigate("/checkout")}
-          >
-            Back to Checkout
-          </button>
-        )}
+        <button
+          className="payment-back-button"
+          onClick={() =>
+            navigate("/products")
+          }
+        >
+          Continue Shopping
+        </button>
 
       </div>
+
     </div>
   );
 }
 
 export default Payment;
-
