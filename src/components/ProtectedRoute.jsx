@@ -1,42 +1,36 @@
-import { useEffect, useState } from "react";
-import { Navigate, useLocation } from "react-router-dom";
-import { supabase } from "../service/supabase";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import "../styles/ProtectedRoute.css";
 
-function ProtectedRoute({ children }) {
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
-
+function ProtectedRoute() {
+  const { user, loading } = useAuth();
   const location = useLocation();
 
-  useEffect(() => {
-    async function checkUser() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      setUser(user);
-      setLoading(false);
-    }
-
-    checkUser();
-  }, []);
-
   if (loading) {
-    return <p>Loading...</p>;
+    return (
+      <div className="protected-loading">
+        <div className="protected-spinner"></div>
+        <p>Loading...</p>
+      </div>
+    );
   }
 
   if (!user) {
+    const redirect =
+      location.pathname +
+      location.search;
+
     return (
       <Navigate
         to={`/login?redirect=${encodeURIComponent(
-          location.pathname
+          redirect
         )}`}
         replace
       />
     );
   }
 
-  return children;
+  return <Outlet />;
 }
 
 export default ProtectedRoute;

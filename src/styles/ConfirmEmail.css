@@ -1,0 +1,168 @@
+/* =========================
+   CONFIRM EMAIL PAGE
+========================= */
+
+.confirm-email-page {
+  min-height: 100vh;
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 40px 20px;
+
+  box-sizing: border-box;
+
+  background: #f6f6f6;
+}
+
+/* Card */
+
+.confirm-email-card {
+  width: 100%;
+  max-width: 480px;
+
+  padding: 45px 40px;
+
+  box-sizing: border-box;
+
+  text-align: center;
+
+  background: #ffffff;
+
+  border: 1px solid #e5e5e5;
+  border-radius: 16px;
+
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.06);
+}
+
+/* Icon */
+
+.confirm-email-icon {
+  width: 64px;
+  height: 64px;
+
+  margin: 0 auto 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #111111;
+  color: #ffffff;
+
+  font-size: 28px;
+  font-weight: 600;
+}
+
+/* Heading */
+
+.confirm-email-card h1 {
+  margin: 0 0 14px;
+
+  font-size: 30px;
+  font-weight: 700;
+
+  letter-spacing: -0.5px;
+
+  color: #111111;
+}
+
+/* Text */
+
+.confirm-email-card p {
+  margin: 10px 0;
+
+  color: #666666;
+
+  font-size: 15px;
+
+  line-height: 1.6;
+}
+
+/* Email */
+
+.confirm-email-card strong {
+  display: block;
+
+  margin: 14px 0 18px;
+
+  color: #111111;
+
+  font-size: 15px;
+
+  word-break: break-word;
+}
+
+/* Button */
+
+.confirm-email-button {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  height: 48px;
+
+  margin-top: 28px;
+
+  box-sizing: border-box;
+
+  border-radius: 8px;
+
+  background: #111111;
+  color: #ffffff;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  text-decoration: none;
+
+  transition:
+    background 0.2s ease,
+    transform 0.1s ease;
+}
+
+.confirm-email-button:hover {
+  background: #333333;
+}
+
+.confirm-email-button:active {
+  transform: scale(0.99);
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 600px) {
+  .confirm-email-page {
+    padding: 24px 16px;
+    align-items: flex-start;
+  }
+
+  .confirm-email-card {
+    margin-top: 30px;
+
+    padding: 36px 24px;
+
+    border-radius: 14px;
+  }
+
+  .confirm-email-card h1 {
+    font-size: 26px;
+  }
+
+  .confirm-email-icon {
+    width: 58px;
+    height: 58px;
+
+    font-size: 24px;
+  }
+}

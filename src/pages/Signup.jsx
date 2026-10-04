@@ -1,14 +1,34 @@
-
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
+
 import { supabase } from "../service/supabase";
 import "../styles/Signup.css";
 
 function Signup() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail] =
+    useState("");
+
+  const [password, setPassword] =
+    useState("");
+
+  const [confirmPassword, setConfirmPassword] =
+    useState("");
+
+  const [showPassword, setShowPassword] =
+    useState(false);
+
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState(false);
+
+  const [message, setMessage] =
+    useState("");
+
+  const [loading, setLoading] =
+    useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -16,39 +36,99 @@ function Signup() {
   const handleSignup = async (e) => {
     e.preventDefault();
 
-    setLoading(true);
     setMessage("");
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
+    const cleanEmail =
+      email.trim().toLowerCase();
 
-    if (error) {
-      setMessage(error.message);
-      setLoading(false);
+    if (password.length < 8) {
+      setMessage(
+        "Password must be at least 8 characters."
+      );
       return;
     }
 
-    // Check where the user came from
-    const params = new URLSearchParams(location.search);
-    const redirect = params.get("redirect");
-
-    // Email confirmation is required
-    if (!data.session) {
+    if (
+      password !==
+      confirmPassword
+    ) {
       setMessage(
-        "Account created. Please check your email to confirm your account."
+        "Passwords do not match."
+      );
+      return;
+    }
+
+    setLoading(true);
+
+    const {
+      data,
+      error,
+    } =
+      await supabase.auth.signUp({
+        email: cleanEmail,
+        password,
+      });
+
+    if (error) {
+      console.error(
+        "Signup error:",
+        error
+      );
+
+      setMessage(
+        error.message
       );
 
       setLoading(false);
       return;
     }
 
-    // Supabase logged the user in immediately
+    const params =
+      new URLSearchParams(
+        location.search
+      );
+
+    const redirect =
+      params.get("redirect");
+
+    /*
+      When email confirmation is enabled,
+      Supabase normally returns no session.
+    */
+
+    if (!data.session) {
+      navigate(
+        `/confirm-email?email=${encodeURIComponent(
+          cleanEmail
+        )}${
+          redirect
+            ? `&redirect=${encodeURIComponent(
+                redirect
+              )}`
+            : ""
+        }`,
+        {
+          replace: true,
+        }
+      );
+
+      return;
+    }
+
+    /*
+      If email confirmation is disabled
+      and Supabase creates a session,
+      continue normally.
+    */
+
     if (redirect) {
-      navigate(redirect);
+      navigate(redirect, {
+        replace: true,
+      });
     } else {
-      navigate("/");
+      navigate("/", {
+        replace: true,
+      });
     }
 
     setLoading(false);
@@ -57,10 +137,21 @@ function Signup() {
   return (
     <div className="signup-page">
       <div className="signup-card">
-        <h1>Create Account</h1>
 
-        <form onSubmit={handleSignup}>
-          <div>
+        <div className="signup-header">
+          <h1>
+            Create your account
+          </h1>
+
+          <p>
+            Join our marketplace today
+          </p>
+        </div>
+
+        <form
+          onSubmit={handleSignup}
+        >
+          <div className="signup-field">
             <label htmlFor="signup-email">
               Email
             </label>
@@ -70,55 +161,131 @@ function Signup() {
               type="email"
               value={email}
               onChange={(e) =>
-                setEmail(e.target.value)
+                setEmail(
+                  e.target.value
+                )
               }
-              placeholder="Enter your email"
+              placeholder="you@example.com"
               autoComplete="email"
               required
             />
           </div>
 
-          <div>
+          <div className="signup-field">
             <label htmlFor="signup-password">
               Password
             </label>
 
-            <input
-              id="signup-password"
-              type="password"
-              value={password}
-              onChange={(e) =>
-                setPassword(e.target.value)
-              }
-              placeholder="Create a password"
-              autoComplete="new-password"
-              minLength={6}
-              required
-            />
+            <div className="password-input-wrapper">
+              <input
+                id="signup-password"
+                type={
+                  showPassword
+                    ? "text"
+                    : "password"
+                }
+                value={password}
+                onChange={(e) =>
+                  setPassword(
+                    e.target.value
+                  )
+                }
+                placeholder="At least 8 characters"
+                autoComplete="new-password"
+                minLength={8}
+                required
+              />
+
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() =>
+                  setShowPassword(
+                    !showPassword
+                  )
+                }
+              >
+                {showPassword
+                  ? "Hide"
+                  : "Show"}
+              </button>
+            </div>
+          </div>
+
+          <div className="signup-field">
+            <label htmlFor="signup-confirm-password">
+              Confirm password
+            </label>
+
+            <div className="password-input-wrapper">
+              <input
+                id="signup-confirm-password"
+                type={
+                  showConfirmPassword
+                    ? "text"
+                    : "password"
+                }
+                value={
+                  confirmPassword
+                }
+                onChange={(e) =>
+                  setConfirmPassword(
+                    e.target.value
+                  )
+                }
+                placeholder="Enter your password again"
+                autoComplete="new-password"
+                minLength={8}
+                required
+              />
+
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() =>
+                  setShowConfirmPassword(
+                    !showConfirmPassword
+                  )
+                }
+              >
+                {showConfirmPassword
+                  ? "Hide"
+                  : "Show"}
+              </button>
+            </div>
           </div>
 
           <button
             type="submit"
+            className="signup-button"
             disabled={loading}
           >
-            {loading ? "Creating..." : "Sign Up"}
+            {loading
+              ? "Creating account..."
+              : "Create Account"}
           </button>
         </form>
 
-        {message && <p>{message}</p>}
+        {message && (
+          <div className="signup-message">
+            {message}
+          </div>
+        )}
 
-        <p>
-          Already have an account?{" "}
+        <div className="signup-footer">
+          <span>
+            Already have an account?
+          </span>
+
           <Link
             to={`/login${
-              location.search
-                ? location.search
-                : ""
+              location.search || ""
             }`}
           >
             Sign In
           </Link>
-        </p>
+        </div>
+
       </div>
     </div>
   );
