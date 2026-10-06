@@ -289,7 +289,50 @@ function Products() {
       );
     }
   };
+  // =====================================================
+// DELETE PRODUCT
+// =====================================================
 
+const deleteProduct = async (product) => {
+  const confirmed = window.confirm(
+    `Are you sure you want to delete "${product.name}"?\n\nThis action cannot be undone.`
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    setError("");
+
+    // Delete product
+    const { error: deleteError } = await supabase
+      .from("products")
+      .delete()
+      .eq("id", product.id);
+
+    if (deleteError) {
+      throw deleteError;
+    }
+
+    // Remove from UI
+    setProducts((current) =>
+      current.filter(
+        (item) => item.id !== product.id
+      )
+    );
+  } catch (err) {
+    console.error(
+      "Delete product error:",
+      err
+    );
+
+    setError(
+      err.message ||
+        "Failed to delete product."
+    );
+  }
+};
   // =====================================================
   // FILTER PRODUCTS
   // =====================================================
@@ -777,6 +820,15 @@ function Products() {
                               className="dashboard-btn dashboard-btn-secondary">
                               Edit    
                             </Link>
+                             <button
+                                type="button"
+                                className="products-action-btn products-delete-btn"
+                               onClick={() =>
+                              deleteProduct(product)
+                              }
+                              >
+                              Delete
+                            </button>
 
                           </div>
 

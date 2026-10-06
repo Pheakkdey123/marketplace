@@ -8,69 +8,62 @@ function Home() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [cardsVisible, setCardsVisible] = useState(4);
+
+  const [heroIndex, setHeroIndex] = useState(0);
+  const [arrivalStart, setArrivalStart] = useState(0);
 
   useEffect(() => {
-    loadHomeData();
+    loadHome();
   }, []);
 
-  /*
-    Responsive slider
-  */
-  useEffect(() => {
-    function updateCardsVisible() {
-      if (window.innerWidth <= 600) {
-        setCardsVisible(2);
-      } else if (window.innerWidth <= 900) {
-        setCardsVisible(3);
-      } else {
-        setCardsVisible(4);
-      }
-    }
-
-    updateCardsVisible();
-
-    window.addEventListener("resize", updateCardsVisible);
-
-    return () => {
-      window.removeEventListener("resize", updateCardsVisible);
-    };
-  }, []);
-
-  async function loadHomeData() {
+  async function loadHome() {
     try {
       setLoading(true);
 
-      /*
-        PRODUCTS
-      */
-      const { data: productData, error: productError } =
-        await supabase
+      const [
+        productsResult,
+        categoriesResult,
+      ] = await Promise.all([
+        supabase
           .from("products")
           .select("*")
           .eq("is_active", true)
-          .order("id", { ascending: false });
+          .order("id", {
+            ascending: false,
+          }),
 
-      if (productError) {
-        console.error("Product error:", productError);
-        setProducts([]);
-        return;
+        supabase
+          .from("categories")
+          .select("*")
+          .eq("is_active", true)
+          .order("name"),
+      ]);
+
+      if (productsResult.error) {
+        console.error(
+          "Products error:",
+          productsResult.error
+        );
       }
 
-      const loadedProducts = productData || [];
+      if (categoriesResult.error) {
+        console.error(
+          "Categories error:",
+          categoriesResult.error
+        );
+      }
 
-      /*
-        PRODUCT IMAGES
-      */
+      const loadedProducts =
+        productsResult.data || [];
+
       const productIds = loadedProducts.map(
         (product) => product.id
       );
 
-      let imageData = [];
+      let images = [];
 
       if (productIds.length > 0) {
-        const { data, error: imageError } =
+        const { data, error } =
           await supabase
             .from("product_images")
             .select(`
@@ -81,7 +74,10 @@ function Home() {
               sort_order,
               is_primary
             `)
-            .in("product_id", productIds)
+            .in(
+              "product_id",
+              productIds
+            )
             .order("is_primary", {
               ascending: false,
             })
@@ -89,657 +85,763 @@ function Home() {
               ascending: true,
             });
 
-        if (imageError) {
-          console.error("Image error:", imageError);
+        if (error) {
+          console.error(
+            "Images error:",
+            error
+          );
         } else {
-          imageData = data || [];
+          images = data || [];
         }
       }
 
-      /*
-        ATTACH PRIMARY IMAGE
-      */
-      const finalProducts = loadedProducts.map(
-        (product) => {
-          const productImages = imageData.filter(
-            (image) =>
-              image.product_id === product.id
-          );
+      const finalProducts =
+        loadedProducts.map((product) => {
+          const productImages =
+            images.filter(
+              (image) =>
+                image.product_id ===
+                product.id
+            );
 
-          const primaryImage =
+          const primary =
             productImages.find(
-              (image) => image.is_primary === true
-            ) || productImages[0];
+              (image) =>
+                image.is_primary
+            ) ||
+            productImages[0];
 
           return {
             ...product,
-
             display_image:
-              primaryImage?.image_url ||
+              primary?.image_url ||
               product.image_url ||
               "",
-
             display_alt:
-              primaryImage?.alt_text ||
+              primary?.alt_text ||
               product.name ||
               "Product",
           };
-        }
-      );
+        });
 
       setProducts(finalProducts);
-      setCurrentSlide(0);
-
-      /*
-        CATEGORIES
-      */
-      const { data: categoryData, error: categoryError } =
-        await supabase
-          .from("categories")
-          .select("*")
-          .eq("is_active", true)
-          .order("name");
-
-      if (categoryError) {
-        console.error(
-          "Category error:",
-          categoryError
-        );
-        setCategories([]);
-      } else {
-        setCategories(categoryData || []);
-      }
+      setCategories(
+        categoriesResult.data || []
+      );
     } catch (error) {
-      console.error("Home error:", error);
-      setProducts([]);
-      setCategories([]);
+      console.error(
+        "Home error:",
+        error
+      );
     } finally {
       setLoading(false);
     }
   }
 
-  /*
-    SLIDER
-  */
-  const maxSlide = Math.max(
-    0,
-    products.length - cardsVisible
-  );
+  /* HERO SLIDER */
 
-  const totalSlides = maxSlide + 1;
+  const heroProducts =
+    products.slice(0, 5);
 
   useEffect(() => {
-    if (currentSlide > maxSlide) {
-      setCurrentSlide(maxSlide);
-    }
-  }, [cardsVisible, maxSlide, currentSlide]);
+    if (heroProducts.length <= 1)
+      return;
 
-  function nextSlide() {
-    if (maxSlide <= 0) return;
+    const timer = setInterval(() => {
+      setHeroIndex((current) =>
+        current >=
+        heroProducts.length - 1
+          ? 0
+          : current + 1
+      );
+    }, 4500);
 
-    setCurrentSlide((current) =>
-      current >= maxSlide ? 0 : current + 1
-    );
-  }
+    return () =>
+      clearInterval(timer);
+  }, [products]);
 
-  function previousSlide() {
-    if (maxSlide <= 0) return;
-
-    setCurrentSlide((current) =>
-      current <= 0 ? maxSlide : current - 1
-    );
-  }
-
-  function goToSlide(index) {
-    setCurrentSlide(
-      Math.min(index, maxSlide)
-    );
-  }
-
-  /*
-    HOME DATA
-  */
-
-  // First 3 products
-  const featuredProducts = products.slice(0, 3);
-
-  // Product used for spotlight
-  const spotlightProduct =
-    products[3] || products[0];
-
-  // New arrivals
-  const newArrivals = products.slice(0, 10);
-
-  // Hero product
   const heroProduct =
-    products.find(
-      (product) => product.display_image
-    ) || products[0];
+    heroProducts[heroIndex];
 
-  /*
-    CATEGORY LIMIT
-  */
-  const displayedCategories =
-    categories.slice(0, 6);
+  /* PRODUCTS */
+
+  const newArrivals =
+    products.slice(0, 10);
+
+  const bestSellers =
+    products.slice(3, 6);
+
+  const categoryProducts =
+    categories.map((category) => {
+      const product =
+        products.find(
+          (item) =>
+            item.category_id ===
+            category.id
+        );
+
+      return {
+        ...category,
+        image:
+          product?.display_image || "",
+      };
+    });
+
+  function price(value) {
+    return Number(value || 0).toFixed(2);
+  }
+
+  function nextArrivals() {
+    if (newArrivals.length <= 4)
+      return;
+
+    setArrivalStart((current) =>
+      current >= newArrivals.length - 4
+        ? 0
+        : current + 1
+    );
+  }
+
+  function previousArrivals() {
+    if (newArrivals.length <= 4)
+      return;
+
+    setArrivalStart((current) =>
+      current <= 0
+        ? newArrivals.length - 4
+        : current - 1
+    );
+  }
 
   return (
-    <div className="home">
+    <div className="store-home">
+
+      {/* =====================================
+          PROMO BAR
+      ===================================== */}
+
+      <div className="store-promo-bar">
+        <span>
+          🚚 Free Worldwide Shipping Over $50
+        </span>
+
+        <span>|</span>
+
+        <span>
+          ☀️ Summer Sale Up To 70% Off
+        </span>
+
+        <span>|</span>
+
+        <span>
+          ⚡ Limited Time Flash Deals
+        </span>
+      </div>
 
       <Navbar />
 
-      {/* =====================================================
+      {/* =====================================
           HERO
-      ===================================================== */}
+      ===================================== */}
 
-      <section className="home-hero">
+      <section className="store-hero">
 
-        <div className="home-hero-content">
+        <div className="store-hero-content">
 
-          <p className="home-hero-small">
-            WELCOME TO OUR MARKETPLACE
-          </p>
+          <span className="store-orange-label">
+            TRENDING NOW
+          </span>
 
           <h1>
-            Find what
+            Discover Products
             <br />
-            you need.
+            You’ll Love
           </h1>
 
-          <p className="home-hero-description">
-            Discover quality products from different
-            categories, all in one simple marketplace.
+          <p>
+            Shop the latest products
+            curated for modern
+            lifestyles.
           </p>
 
-          <Link
-            to="/products"
-            className="home-hero-button"
-          >
-            Explore Products
-            <span>→</span>
-          </Link>
-
-        </div>
-
-
-        {/* HERO PRODUCT */}
-
-        {heroProduct && (
-          <div className="home-hero-showcase">
+          <div className="store-hero-buttons">
 
             <Link
-              to={`/products/${heroProduct.id}`}
-              className="home-hero-product"
+              to="/products"
+              className="store-orange-button"
             >
-
-              <div className="home-hero-image">
-
-                {heroProduct.display_image ? (
-                  <img
-                    src={heroProduct.display_image}
-                    alt={heroProduct.display_alt}
-                  />
-                ) : (
-                  <div className="home-no-image">
-                    No image
-                  </div>
-                )}
-
-              </div>
-
-              <div className="home-hero-product-info">
-
-                <div>
-                  <p>
-                    {heroProduct.category ||
-                      "Featured Product"}
-                  </p>
-
-                  <h2>
-                    {heroProduct.name}
-                  </h2>
-                </div>
-
-                <strong>
-                  $
-                  {Number(
-                    heroProduct.price || 0
-                  ).toFixed(2)}
-                </strong>
-
-              </div>
-
+              Shop Now
+              <span>→</span>
             </Link>
 
-            <div className="home-decoration home-decoration-one" />
-            <div className="home-decoration home-decoration-two" />
+            <Link
+              to="/products"
+              className="store-outline-button"
+            >
+              Explore Collection
+            </Link>
 
           </div>
-        )}
 
-      </section>
+          <div className="store-customers">
 
-
-      {/* =====================================================
-          CATEGORIES
-      ===================================================== */}
-
-      {!loading &&
-        displayedCategories.length > 0 && (
-          <section className="home-categories">
-
-            <div className="home-section-heading">
-
-              <div>
-                <p className="home-section-label">
-                  BROWSE
-                </p>
-
-                <h2>
-                  Shop by Category
-                </h2>
-              </div>
-
-              <Link
-                to="/products"
-                className="home-view-all"
-              >
-                All Categories →
-              </Link>
-
+            <div className="customer-avatars">
+              <span>👨</span>
+              <span>👩</span>
+              <span>👨</span>
+              <span>👩</span>
             </div>
 
+            <small>
+              Loved by shoppers worldwide
+            </small>
 
-            <div className="home-category-list">
-
-              {displayedCategories.map(
-                (category) => (
-                  <Link
-                    key={category.id}
-                    to="/products"
-                    className="home-category-card"
-                  >
-
-                    <span>
-                      {category.name}
-                    </span>
-
-                    <span className="home-category-arrow">
-                      →
-                    </span>
-
-                  </Link>
-                )
-              )}
-
-            </div>
-
-          </section>
-        )}
-
-
-      {/* =====================================================
-          FEATURED PRODUCTS
-      ===================================================== */}
-
-      <section className="home-featured">
-
-        <div className="home-section-heading">
-
-          <div>
-            <p className="home-section-label">
-              OUR COLLECTION
-            </p>
-
-            <h2>
-              Featured Products
-            </h2>
           </div>
-
-          <Link
-            to="/products"
-            className="home-view-all"
-          >
-            View all →
-          </Link>
-
         </div>
 
+        {/* HERO IMAGE */}
 
-        {loading && (
-          <div className="home-loading">
-            Loading products...
-          </div>
-        )}
+        <div className="store-hero-visual">
 
+          <div className="hero-orange-shape" />
 
-        {!loading &&
-          featuredProducts.length === 0 && (
-            <div className="home-empty">
-              No products available.
-            </div>
-          )}
-
-
-        {!loading &&
-          featuredProducts.length > 0 && (
-            <div className="home-featured-grid">
-
-              {featuredProducts.map(
-                (product) => (
-                  <Link
-                    key={product.id}
-                    to={`/products/${product.id}`}
-                    className="home-product-card"
-                  >
-
-                    <div className="home-product-image">
-
-                      {product.display_image ? (
-                        <img
-                          src={product.display_image}
-                          alt={product.display_alt}
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="home-no-image">
-                          No image
-                        </div>
-                      )}
-
-                    </div>
-
-
-                    <div className="home-product-info">
-
-                      <div>
-
-                        <p className="home-product-category">
-                          {product.category ||
-                            "Product"}
-                        </p>
-
-                        <h3>
-                          {product.name}
-                        </h3>
-
-                      </div>
-
-                      <strong>
-                        $
-                        {Number(
-                          product.price || 0
-                        ).toFixed(2)}
-                      </strong>
-
-                    </div>
-
-                  </Link>
-                )
-              )}
-
-            </div>
-          )}
-
-      </section>
-
-
-      {/* =====================================================
-          PRODUCT SPOTLIGHT
-      ===================================================== */}
-
-      {!loading &&
-        spotlightProduct && (
-          <section className="home-spotlight">
-
-            <div className="home-spotlight-image">
-
-              {spotlightProduct.display_image ? (
+          {heroProduct && (
+            <Link
+              to={`/products/${heroProduct.id}`}
+              className="hero-main-product"
+              key={heroProduct.id}
+            >
+              {heroProduct.display_image ? (
                 <img
                   src={
-                    spotlightProduct.display_image
+                    heroProduct.display_image
                   }
                   alt={
-                    spotlightProduct.display_alt
+                    heroProduct.display_alt
                   }
                 />
               ) : (
-                <div className="home-no-image">
+                <div>
                   No image
                 </div>
               )}
+            </Link>
+          )}
 
+          {heroProducts[0] && (
+            <HeroFloatingCard
+              product={heroProducts[0]}
+              className="hero-card-one"
+            />
+          )}
+
+          {heroProducts[1] && (
+            <HeroFloatingCard
+              product={heroProducts[1]}
+              className="hero-card-two"
+            />
+          )}
+
+          {heroProducts[2] && (
+            <HeroFloatingCard
+              product={heroProducts[2]}
+              className="hero-card-three"
+            />
+          )}
+
+          {heroProducts.length > 1 && (
+            <div className="hero-dots">
+              {heroProducts.map(
+                (product, index) => (
+                  <button
+                    key={product.id}
+                    type="button"
+                    className={
+                      index === heroIndex
+                        ? "active"
+                        : ""
+                    }
+                    onClick={() =>
+                      setHeroIndex(index)
+                    }
+                  />
+                )
+              )}
             </div>
+          )}
 
+        </div>
+      </section>
 
-            <div className="home-spotlight-content">
+      {/* =====================================
+          SERVICES
+      ===================================== */}
 
-              <p className="home-spotlight-label">
-                NEW ARRIVAL
-              </p>
+      <section className="store-services">
 
-              <h2>
-                {spotlightProduct.name}
-              </h2>
+        <Service
+          icon="🚚"
+          title="Free Shipping"
+          text="On orders over $50"
+        />
 
-              <p className="home-spotlight-description">
-                Discover this product and explore
-                more details, available options and
-                pricing.
-              </p>
+        <Service
+          icon="🔒"
+          title="Secure Payments"
+          text="100% secure checkout"
+        />
 
-              <div className="home-spotlight-price">
-                $
-                {Number(
-                  spotlightProduct.price || 0
-                ).toFixed(2)}
-              </div>
+        <Service
+          icon="↻"
+          title="Easy Returns"
+          text="30-day return policy"
+        />
 
-              <Link
-                to={`/products/${spotlightProduct.id}`}
-                className="home-dark-button"
-              >
-                View Product
-                <span>→</span>
-              </Link>
+        <Service
+          icon="♧"
+          title="24/7 Support"
+          text="Always here to help"
+        />
 
-            </div>
+      </section>
 
-          </section>
-        )}
+      {/* =====================================
+          CATEGORIES
+      ===================================== */}
 
+      {categoryProducts.length > 0 && (
+        <section className="store-section">
 
-      {/* =====================================================
-          NEW ARRIVALS
-      ===================================================== */}
+          <SectionTitle
+            title="Shop by Categories"
+            link="View All Categories"
+          />
 
-      {!loading &&
-        newArrivals.length > 0 && (
-          <section className="home-arrivals">
+          <div className="category-grid">
 
-            <div className="home-section-heading">
-
-              <div>
-                <p className="home-section-label">
-                  JUST ADDED
-                </p>
-
-                <h2>
-                  New Arrivals
-                </h2>
-              </div>
-
-              <Link
-                to="/products"
-                className="home-view-all"
-              >
-                View all →
-              </Link>
-
-            </div>
-
-
-            <div className="home-slider">
-
-              {newArrivals.length > cardsVisible && (
-                <button
-                  className="home-slider-button left"
-                  onClick={previousSlide}
-                  type="button"
-                  aria-label="Previous products"
+            {categoryProducts
+              .slice(0, 6)
+              .map((category) => (
+                <Link
+                  key={category.id}
+                  to={`/products?category=${category.id}`}
+                  className="category-card"
                 >
-                  ‹
-                </button>
+
+                  <div className="category-image">
+
+                    {category.image ? (
+                      <img
+                        src={category.image}
+                        alt={category.name}
+                      />
+                    ) : (
+                      <div className="category-empty">
+                        {category.name}
+                      </div>
+                    )}
+
+                  </div>
+
+                  <div className="category-overlay">
+                    <strong>
+                      {category.name}
+                    </strong>
+
+                    <span>
+                      Shop Now →
+                    </span>
+                  </div>
+
+                </Link>
+              ))}
+          </div>
+        </section>
+      )}
+
+      {/* =====================================
+          NEW ARRIVALS
+      ===================================== */}
+
+      <section className="store-section">
+
+        <SectionTitle
+          title="New Arrivals"
+          link="View All New Arrivals"
+        />
+
+        <div className="products-slider">
+
+          {newArrivals.length > 4 && (
+            <button
+              className="slider-arrow left"
+              onClick={
+                previousArrivals
+              }
+            >
+              ‹
+            </button>
+          )}
+
+          <div className="products-window">
+
+            <div
+              className="products-track"
+              style={{
+                transform: `translateX(-${
+                  arrivalStart * 25
+                }%)`,
+              }}
+            >
+
+              {newArrivals.map(
+                (product) => (
+                  <div
+                    className="product-slide"
+                    key={product.id}
+                  >
+                    <ProductCard
+                      product={product}
+                    />
+                  </div>
+                )
               )}
 
+            </div>
 
-              <div className="home-slider-viewport">
+          </div>
 
+          {newArrivals.length > 4 && (
+            <button
+              className="slider-arrow right"
+              onClick={nextArrivals}
+            >
+              ›
+            </button>
+          )}
+
+        </div>
+      </section>
+
+      {/* =====================================
+          BEST SELLERS
+      ===================================== */}
+
+      {bestSellers.length > 0 && (
+        <section className="store-section">
+
+          <SectionTitle
+            title="Best Sellers"
+            link="View All Best Sellers"
+          />
+
+          <div className="best-seller-grid">
+
+            {bestSellers.map(
+              (product) => (
                 <div
-                  className="home-slider-track"
-                  style={{
-                    "--current-slide":
-                      currentSlide,
-                    "--cards-visible":
-                      cardsVisible,
-                  }}
+                  className="best-seller"
+                  key={product.id}
                 >
 
-                  {newArrivals.map(
-                    (product) => (
-                      <div
-                        className="home-slide"
-                        key={product.id}
-                      >
+                  <div className="best-seller-image">
 
-                        <Link
-                          to={`/products/${product.id}`}
-                          className="home-arrival-card"
-                        >
+                    {product.display_image && (
+                      <img
+                        src={
+                          product.display_image
+                        }
+                        alt={
+                          product.display_alt
+                        }
+                      />
+                    )}
 
-                          <div className="home-arrival-image">
+                  </div>
 
-                            {product.display_image ? (
-                              <img
-                                src={
-                                  product.display_image
-                                }
-                                alt={
-                                  product.display_alt
-                                }
-                                loading="lazy"
-                              />
-                            ) : (
-                              <div className="home-no-image">
-                                No image
-                              </div>
-                            )}
+                  <div className="best-seller-info">
 
-                          </div>
+                    <span className="seller-badge">
+                      Bestseller
+                    </span>
 
+                    <h3>
+                      {product.name}
+                    </h3>
 
-                          <div className="home-arrival-info">
+                    <strong>
+                      ${price(product.price)}
+                    </strong>
 
-                            <p>
-                              {product.category ||
-                                "Product"}
-                            </p>
+                    <div className="rating">
+                      ★★★★★
+                    </div>
 
-                            <h3>
-                              {product.name}
-                            </h3>
+                    <Link
+                      to={`/products/${product.id}`}
+                      className="quick-add"
+                    >
+                      View Product
+                    </Link>
 
-                            <strong>
-                              $
-                              {Number(
-                                product.price || 0
-                              ).toFixed(2)}
-                            </strong>
-
-                          </div>
-
-                        </Link>
-
-                      </div>
-                    )
-                  )}
+                  </div>
 
                 </div>
-
-              </div>
-
-
-              {newArrivals.length > cardsVisible && (
-                <button
-                  className="home-slider-button right"
-                  onClick={nextSlide}
-                  type="button"
-                  aria-label="Next products"
-                >
-                  ›
-                </button>
-              )}
-
-            </div>
-
-
-            {totalSlides > 1 && (
-              <div className="home-slider-dots">
-
-                {Array.from(
-                  { length: totalSlides },
-                  (_, index) => (
-                    <button
-                      key={index}
-                      type="button"
-                      className={
-                        currentSlide === index
-                          ? "active"
-                          : ""
-                      }
-                      onClick={() =>
-                        goToSlide(index)
-                      }
-                      aria-label={`Go to slide ${
-                        index + 1
-                      }`}
-                    />
-                  )
-                )}
-
-              </div>
+              )
             )}
 
-          </section>
-        )}
+          </div>
+        </section>
+      )}
 
+      {/* =====================================
+          PROMO BANNERS
+      ===================================== */}
 
-      {/* =====================================================
-          EXPLORE CTA
-      ===================================================== */}
+      <section className="promo-grid">
 
-      <section className="home-explore">
+        <div className="promo-banner orange">
 
-        <p>
-          EVERYTHING IN ONE PLACE
-        </p>
+          <div>
+            <span>
+              FLASH SALE
+            </span>
 
-        <h2>
-          Ready to find something
-          <br />
-          you like?
-        </h2>
+            <h2>
+              Up To 70% Off
+            </h2>
 
-        <Link
-          to="/products"
-          className="home-explore-button"
-        >
-          Explore Products
-          <span>→</span>
-        </Link>
+            <p>
+              Limited time offers
+            </p>
+
+            <Link to="/products">
+              Shop Sale Now →
+            </Link>
+          </div>
+
+          {products[0]?.display_image && (
+            <img
+              src={
+                products[0].display_image
+              }
+              alt=""
+            />
+          )}
+
+        </div>
+
+        <div className="promo-banner dark">
+
+          <div>
+            <span>
+              NEW COLLECTION
+            </span>
+
+            <h2>
+              Fresh Products
+            </h2>
+
+            <p>
+              Discover what's new
+            </p>
+
+            <Link to="/products">
+              Shop Collection →
+            </Link>
+          </div>
+
+          {products[1]?.display_image && (
+            <img
+              src={
+                products[1].display_image
+              }
+              alt=""
+            />
+          )}
+
+        </div>
+
+      </section>
+
+      {/* =====================================
+          BOTTOM BENEFITS
+      ===================================== */}
+
+      <section className="bottom-services">
+
+        <Service
+          icon="♢"
+          title="Premium Quality"
+          text="Quality products"
+        />
+
+        <Service
+          icon="🚚"
+          title="Fast Delivery"
+          text="Quick and reliable shipping"
+        />
+
+        <Service
+          icon="🔒"
+          title="Secure Checkout"
+          text="Your data is protected"
+        />
+
+        <Service
+          icon="♡"
+          title="Customer Satisfaction"
+          text="We're here for you"
+        />
 
       </section>
 
     </div>
+  );
+}
+
+
+/* =========================================
+   COMPONENTS
+========================================= */
+
+function HeroFloatingCard({
+  product,
+  className,
+}) {
+  return (
+    <Link
+      to={`/products/${product.id}`}
+      className={`hero-floating-card ${className}`}
+    >
+      <div className="floating-image">
+        {product.display_image && (
+          <img
+            src={product.display_image}
+            alt={product.display_alt}
+          />
+        )}
+      </div>
+
+      <div>
+        <strong>
+          {product.name}
+        </strong>
+
+        <span>
+          $
+          {Number(
+            product.price || 0
+          ).toFixed(2)}
+        </span>
+      </div>
+    </Link>
+  );
+}
+
+
+function Service({
+  icon,
+  title,
+  text,
+}) {
+  return (
+    <div className="service-item">
+      <div className="service-icon">
+        {icon}
+      </div>
+
+      <div>
+        <strong>{title}</strong>
+        <span>{text}</span>
+      </div>
+    </div>
+  );
+}
+
+
+function SectionTitle({
+  title,
+  link,
+}) {
+  return (
+    <div className="section-title">
+
+      <h2>{title}</h2>
+
+      <Link to="/products">
+        {link}
+        <span>→</span>
+      </Link>
+
+    </div>
+  );
+}
+
+
+function ProductCard({
+  product,
+}) {
+  return (
+    <Link
+      to={`/products/${product.id}`}
+      className="shop-product-card"
+    >
+
+      <div className="shop-product-image">
+
+        <span className="product-tag">
+          New
+        </span>
+
+        <button
+          type="button"
+          className="wishlist"
+          onClick={(event) =>
+            event.preventDefault()
+          }
+        >
+          ♡
+        </button>
+
+        {product.display_image ? (
+          <img
+            src={product.display_image}
+            alt={product.display_alt}
+          />
+        ) : (
+          <div className="product-empty">
+            No image
+          </div>
+        )}
+
+        <span className="cart-mini">
+          +
+        </span>
+
+      </div>
+
+      <div className="shop-product-info">
+
+        <span>
+          {product.category ||
+            "Product"}
+        </span>
+
+        <h3>
+          {product.name}
+        </h3>
+
+        <strong>
+          $
+          {Number(
+            product.price || 0
+          ).toFixed(2)}
+        </strong>
+
+      </div>
+
+    </Link>
   );
 }
 
