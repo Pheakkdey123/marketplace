@@ -1,161 +1,325 @@
-
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../service/supabase";
 import Navbar from "../components/Navbar";
 import "../styles/Profile.css";
 
 function Profile() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
   const navigate = useNavigate();
 
+  const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
+
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
   useEffect(() => {
-    async function loadUser() {
+    loadProfile();
+  }, []);
+
+  async function loadProfile() {
+    setLoading(true);
+    setError("");
+
+    try {
       const {
         data: { user },
+        error: userError,
       } = await supabase.auth.getUser();
 
+      if (userError) {
+        throw userError;
+      }
+
       if (!user) {
-        navigate("/login", {
-          replace: true,
-        });
+        navigate("/login");
         return;
       }
 
       setUser(user);
+
+      const { data, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (profileError) {
+        throw profileError;
+      }
+
+      setProfile(data);
+
+      setFullName(data.full_name || "");
+      setPhone(data.phone || "");
+      setAddress(data.address || "");
+    } catch (err) {
+      console.error("Profile error:", err);
+      setError(err.message || "Unable to load profile.");
+    } finally {
       setLoading(false);
     }
+  }
 
-    loadUser();
-  }, [navigate]);
+  async function handleSave(e) {
+    e.preventDefault();
 
-  const handleLogout = async () => {
+    setSaving(true);
+    setMessage("");
+    setError("");
+
+    try {
+      if (!user) {
+        navigate("/login");
+        return;
+      }
+
+      const { data, error: updateError } = await supabase
+        .from("profiles")
+        .update({
+          full_name: fullName.trim(),
+          phone: phone.trim(),
+          address: address.trim(),
+        })
+        .eq("id", user.id)
+        .select()
+        .single();
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      setProfile(data);
+
+      setMessage("Profile updated successfully.");
+
+      setTimeout(() => {
+        setMessage("");
+      }, 3000);
+    } catch (err) {
+      console.error("Update profile error:", err);
+      setError(err.message || "Unable to update profile.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleLogout() {
     await supabase.auth.signOut();
+    navigate("/");
+  }
 
-    navigate("/", {
-      replace: true,
-    });
-  };
+  function getInitial() {
+    if (fullName) {
+      return fullName.charAt(0).toUpperCase();
+    }
+
+    if (user?.email) {
+      return user.email.charAt(0).toUpperCase();
+    }
+
+    return "U";
+  }
 
   if (loading) {
     return (
-      <div className="home">
+      <>
         <Navbar />
 
-        <main className="featured">
-          <p>Loading account...</p>
-        </main>
-      </div>
+        <div className="profile-loading">
+          <div className="profile-spinner"></div>
+          <p>Loading profile...</p>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="home">
+    <>
       <Navbar />
 
-      <main className="featured">
+      <main className="profile-page">
+        <div className="profile-container">
 
-        <p className="section-small">
-          YOUR ACCOUNT
-        </p>
-
-        <h1>My Profile</h1>
-
-        <div
-          style={{
-            marginTop: "30px",
-            maxWidth: "700px",
-            background: "#fff",
-            padding: "30px",
-            borderRadius: "12px",
-            border: "1px solid #eee",
-          }}
-        >
-          <p className="section-small">
-            EMAIL
-          </p>
-
-          <h2
-            style={{
-              marginTop: "8px",
-              wordBreak: "break-word",
-            }}
-          >
-            {user.email}
-          </h2>
-
-          <div
-            style={{
-              marginTop: "30px",
-              paddingTop: "25px",
-              borderTop: "1px solid #eee",
-            }}
-          >
-            <p className="section-small">
-              ACCOUNT ID
-            </p>
-
-            <p
-              style={{
-                marginTop: "8px",
-                color: "#666",
-                wordBreak: "break-all",
-              }}
-            >
-              {user.id}
-            </p>
+          {/* Header */}
+          <div className="profile-header">
+            <div>
+              <h1>My Profile</h1>
+              <p>
+                Manage your personal information and account settings.
+              </p>
+            </div>
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              gap: "12px",
-              flexWrap: "wrap",
-              marginTop: "30px",
-            }}
-          >
-            <Link
-              to="/orders"
-              className="hero-button"
-            >
-              My Orders
-            </Link>
+          {/* Error */}
+          {error && (
+            <div className="profile-alert profile-alert-error">
+              {error}
+            </div>
+          )}
 
-            <Link
-              to="/products"
-              style={{
-                display: "inline-block",
-                padding: "13px 24px",
-                border: "1px solid #111",
-                color: "#111",
-                textDecoration: "none",
-                borderRadius: "8px",
-              }}
-            >
-              Continue Shopping
-            </Link>
+          {/* Success */}
+          {message && (
+            <div className="profile-alert profile-alert-success">
+              {message}
+            </div>
+          )}
+
+          <div className="profile-layout">
+
+            {/* Left Profile Card */}
+            <section className="profile-card profile-summary">
+
+              <div className="profile-avatar">
+                {getInitial()}
+              </div>
+
+              <h2>
+                {fullName || "User"}
+              </h2>
+
+              <p className="profile-email">
+                {user?.email}
+              </p>
+
+              <div className="profile-status">
+                <span className="profile-status-dot"></span>
+                Account Active
+              </div>
+
+              <div className="profile-summary-line"></div>
+
+              <div className="profile-summary-item">
+                <span>Account</span>
+                <strong>Customer</strong>
+              </div>
+
+              <div className="profile-summary-item">
+                <span>Email</span>
+                <strong>
+                  {user?.email ? "Verified" : "Not verified"}
+                </strong>
+              </div>
+
+              <button
+                type="button"
+                className="profile-logout"
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+
+            </section>
+
+            {/* Right Edit Card */}
+            <section className="profile-card profile-edit">
+
+              <div className="profile-section-header">
+                <div>
+                  <h2>Personal Information</h2>
+                  <p>Update your account information.</p>
+                </div>
+              </div>
+
+              <form onSubmit={handleSave}>
+
+                {/* Full Name */}
+                <div className="profile-form-group">
+                  <label htmlFor="fullName">
+                    Full Name
+                  </label>
+
+                  <input
+                    id="fullName"
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Enter your full name"
+                  />
+                </div>
+
+                {/* Email */}
+                <div className="profile-form-group">
+                  <label htmlFor="email">
+                    Email Address
+                  </label>
+
+                  <input
+                    id="email"
+                    type="email"
+                    value={user?.email || ""}
+                    disabled
+                  />
+
+                  <small>
+                    Your email address is managed by your login account.
+                  </small>
+                </div>
+
+                {/* Phone */}
+                <div className="profile-form-group">
+                  <label htmlFor="phone">
+                    Phone Number
+                  </label>
+
+                  <input
+                    id="phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="Enter your phone number"
+                  />
+                </div>
+
+                {/* Address */}
+                <div className="profile-form-group">
+                  <label htmlFor="address">
+                    Address
+                  </label>
+
+                  <textarea
+                    id="address"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="Enter your address"
+                    rows="4"
+                  />
+                </div>
+
+                {/* Buttons */}
+                <div className="profile-actions">
+
+                  <button
+                    type="button"
+                    className="profile-btn profile-btn-cancel"
+                    onClick={() => navigate("/home")}
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="profile-btn profile-btn-save"
+                    disabled={saving}
+                  >
+                    {saving ? "Saving..." : "Save Changes"}
+                  </button>
+
+                </div>
+
+              </form>
+            </section>
+
           </div>
-
-          <button
-            onClick={handleLogout}
-            style={{
-              marginTop: "20px",
-              padding: "12px 20px",
-              border: "1px solid #ddd",
-              borderRadius: "8px",
-              background: "#fff",
-              color: "#c00",
-              cursor: "pointer",
-            }}
-          >
-            Sign Out
-          </button>
         </div>
-
       </main>
-    </div>
+    </>
   );
 }
 

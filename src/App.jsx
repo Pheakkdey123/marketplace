@@ -16,6 +16,7 @@ import Signup from "./pages/Signup";
 import ConfirmEmail from "./pages/ConfirmEmail";
 import AuthCallback from "./pages/AuthCallback";
 import AccountSetup from "./pages/AccountSetup";
+import Profile from "./pages/Profile";
 
 // Protected route
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -82,6 +83,10 @@ function App() {
             <Route
               path="/confirm-email"
               element={<ConfirmEmail />}
+            />
+            <Route 
+              path="/profile" 
+              element={<Profile />} 
             />
 
             <Route
